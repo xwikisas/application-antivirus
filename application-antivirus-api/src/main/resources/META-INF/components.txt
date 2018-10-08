@@ -1,0 +1,5 @@
+com.xwiki.antivirus.internal.AntivirusConfigurationSource
+com.xwiki.antivirus.internal.AttachmentUploadedEventListener
+com.xwiki.antivirus.internal.DefaultAntivirusConfiguration
+com.xwiki.antivirus.internal.DefaultAntivirusReportSender
+com.xwiki.antivirus.script.AntivirusScriptService

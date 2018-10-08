@@ -1,0 +1,168 @@
+/*
+ * See the NOTICE file distributed with this work for additional
+ * information regarding copyright ownership.
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+ */
+package com.xwiki.antivirus.internal;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.inject.Inject;
+import javax.inject.Named;
+import javax.inject.Singleton;
+
+import org.slf4j.Logger;
+import org.xwiki.bridge.event.DocumentCreatingEvent;
+import org.xwiki.bridge.event.DocumentUpdatingEvent;
+import org.xwiki.component.annotation.Component;
+import org.xwiki.component.manager.ComponentLookupException;
+import org.xwiki.component.manager.ComponentManager;
+import com.xwiki.antivirus.AntivirusConfiguration;
+import com.xwiki.antivirus.AntivirusEngine;
+import com.xwiki.antivirus.AntivirusException;
+import com.xwiki.antivirus.ScanResult;
+import org.xwiki.diff.Delta.Type;
+import org.xwiki.model.reference.AttachmentReference;
+import org.xwiki.observation.AbstractEventListener;
+import org.xwiki.observation.event.CancelableEvent;
+import org.xwiki.observation.event.Event;
+
+import com.xpn.xwiki.XWikiContext;
+import com.xpn.xwiki.doc.AttachmentDiff;
+import com.xpn.xwiki.doc.XWikiAttachment;
+import com.xpn.xwiki.doc.XWikiDocument;
+
+/**
+ * Listener for whenever an attachment is added to or updated on a document. Each time, each affected attachment is
+ * scanned and, in case a virus is detected, the event and the save operation itself will be cancel.
+ *
+ * @version $Id$
+ */
+@Component
+@Named("com.xwiki.antivirus.internal.AttachmentUploadedEventListener")
+@Singleton
+public class AttachmentUploadedEventListener extends AbstractEventListener
+{
+    @Inject
+    private ComponentManager componentManager;
+
+    @Inject
+    private AntivirusConfiguration antivirusConfiguration;
+
+    @Inject
+    private Logger logger;
+
+    /**
+     * Default constructor.
+     */
+    public AttachmentUploadedEventListener()
+    {
+        super(AttachmentUploadedEventListener.class.getName(),
+            Arrays.asList(new DocumentUpdatingEvent(), new DocumentCreatingEvent()));
+    }
+
+    @Override
+    public void onEvent(Event event, Object source, Object data)
+    {
+        XWikiDocument doc = (XWikiDocument) source;
+        XWikiContext context = (XWikiContext) data;
+
+        // Skip if scanning is disabled.
+        if (!antivirusConfiguration.isEnabled()) {
+            if (logger.isDebugEnabled()) {
+                logger.debug("Skipping attachment scan for event [{}] by user [{}] on document [{}]",
+                    event.getClass().getName(), context.getUserReference(), doc.getDocumentReference());
+            }
+            return;
+        }
+
+        // Get the configured antivirus engine.
+        AntivirusEngine antivirus = null;
+        try {
+            antivirus =
+                componentManager.getInstance(AntivirusEngine.class, antivirusConfiguration.getDefaultEngineName());
+        } catch (ComponentLookupException e) {
+            logger.error(
+                "Failed to load antivirus engine [{}] to scan attachments for event [{}] by user [{}] on document [{}]",
+                antivirusConfiguration.getDefaultEngineName(), event.getClass().getName(), context.getUserReference(),
+                doc.getDocumentReference(), e);
+            return;
+        }
+
+        List<XWikiAttachment> attachmentsToScan = getAttachmentsToScan(event, doc, context);
+
+        Map<AttachmentReference, Collection<String>> infectedAttachments =
+            scan(event, context, antivirus, attachmentsToScan);
+
+        // Cancel the event if we have detected any infections.
+        if (infectedAttachments.size() > 0) {
+            ((CancelableEvent) event)
+                .cancel(String.format("Virus or malware infections found for attachments: [%s]", infectedAttachments));
+        }
+    }
+
+    private Map<AttachmentReference, Collection<String>> scan(Event event, XWikiContext context,
+        AntivirusEngine antivirus, List<XWikiAttachment> attachmentsToScan)
+    {
+        // Scan each attachment and build the list of infections.
+        Map<AttachmentReference, Collection<String>> infectedAttachments = new HashMap<>();
+        for (XWikiAttachment attachment : attachmentsToScan) {
+            try {
+                ScanResult scanResult = antivirus.scan(attachment);
+                if (scanResult.isClean()) {
+                    continue;
+                }
+
+                // Infection found.
+                infectedAttachments.put(attachment.getReference(), scanResult.getfoundViruses());
+                logger.warn("Attachment [{}] found infected with [{}] during event [{}] by user [{}]",
+                    attachment.getReference(), scanResult.getfoundViruses(), event.getClass().getName(),
+                    context.getUserReference());
+            } catch (AntivirusException e) {
+                logger.error("Failed to scan attachment [{}] during event [{}] by user [{}]", attachment.getReference(),
+                    event.getClass().getName(), context.getUserReference(), e);
+            }
+        }
+        return infectedAttachments;
+    }
+
+    private List<XWikiAttachment> getAttachmentsToScan(Event event, XWikiDocument doc, XWikiContext context)
+    {
+        List<XWikiAttachment> attachmentsToScan = new ArrayList<>();
+
+        if (event instanceof DocumentUpdatingEvent) {
+            XWikiDocument originalDoc = doc.getOriginalDocument();
+
+            for (AttachmentDiff diff : doc.getAttachmentDiff(originalDoc, doc, context)) {
+                // Scan only added or updated attachments from the new version of the document.
+                if (diff.getType() == Type.INSERT || diff.getType() == Type.CHANGE) {
+                    attachmentsToScan.add(diff.getNewAttachment());
+                }
+            }
+        } else if (event instanceof DocumentCreatingEvent) {
+            // New document = new attachments.
+            attachmentsToScan = doc.getAttachmentList();
+        }
+
+        return attachmentsToScan;
+    }
+}

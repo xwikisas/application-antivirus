@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+ * See the NOTICE file distributed with this work for additional
+ * information regarding copyright ownership.
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+-->
+
+<xwikidoc version="1.1">
+  <web>Antivirus</web>
+  <name>ScheduledScanReportMailTemplate</name>
+  <language/>
+  <defaultLanguage/>
+  <translation>0</translation>
+  <creator>xwiki:XWiki.Admin</creator>
+  <creationDate>1538173144000</creationDate>
+  <parent>Antivirus.WebHome</parent>
+  <author>xwiki:XWiki.Admin</author>
+  <contentAuthor>xwiki:XWiki.Admin</contentAuthor>
+  <date>1538672444000</date>
+  <contentUpdateDate>1538173148000</contentUpdateDate>
+  <version>1.1</version>
+  <title/>
+  <comment/>
+  <minorEdit>false</minorEdit>
+  <syntaxId>xwiki/2.1</syntaxId>
+  <hidden>true</hidden>
+  <content/>
+  <object>
+    <name>Antivirus.ScheduledScanReportMailTemplate</name>
+    <number>0</number>
+    <className>XWiki.Mail</className>
+    <guid>42389dac-3d30-4928-a627-c42e2151b089</guid>
+    <class>
+      <name>XWiki.Mail</name>
+      <customClass/>
+      <customMapping/>
+      <defaultViewSheet/>
+      <defaultEditSheet/>
+      <defaultWeb/>
+      <nameField/>
+      <validationScript/>
+      <html>
+        <disabled>0</disabled>
+        <name>html</name>
+        <number>4</number>
+        <prettyName>HTML</prettyName>
+        <rows>15</rows>
+        <size>80</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.TextAreaClass</classType>
+      </html>
+      <language>
+        <disabled>0</disabled>
+        <name>language</name>
+        <number>2</number>
+        <prettyName>Language</prettyName>
+        <size>5</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.StringClass</classType>
+      </language>
+      <subject>
+        <disabled>0</disabled>
+        <name>subject</name>
+        <number>1</number>
+        <prettyName>Subject</prettyName>
+        <size>40</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.StringClass</classType>
+      </subject>
+      <text>
+        <disabled>0</disabled>
+        <name>text</name>
+        <number>3</number>
+        <prettyName>Text</prettyName>
+        <rows>15</rows>
+        <size>80</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.TextAreaClass</classType>
+      </text>
+    </class>
+    <property>
+      <html>#macro (printAttachments $attachmentsMap)
+  &lt;table&gt;
+  &lt;tr&gt;
+    &lt;th style="text-align: left"&gt;Filename&lt;/th&gt;
+    &lt;th style="text-align: left"&gt;Document&lt;/th&gt;
+    &lt;th style="text-align: left"&gt;Uploaded by&lt;/th&gt;
+    &lt;th style="text-align: left"&gt;Upload Date&lt;/th&gt;
+    &lt;th style="text-align: left"&gt;Infection Type&lt;/th&gt;
+  &lt;/tr&gt;
+  #foreach ($attachmentsMapEntry in $attachmentsMap.entrySet())
+    #set ($attachment = $attachmentsMapEntry.key)
+    &lt;tr&gt;
+      &lt;td style="text-align: left"&gt;$escapetool.xml($attachment.filename)&lt;/td&gt;
+      &lt;td style="text-align: left"&gt;&lt;a href="$attachment.document.externalURL"&gt;$escapetool.xml($attachment.document.plainTitle)&lt;/a&gt;&lt;/td&gt;
+      #set ($authorReference = $attachment.attachment.authorReference)
+      &lt;td style="text-align: left"&gt;&lt;a href="$xwiki.xWiki.getExternalURL($authorReference, 'view', $xcontext.context)"&gt;$escapetool.xml($xwiki.getPlainUserName($authorReference))&lt;/a&gt;&lt;/td&gt;
+      &lt;td style="text-align: left"&gt;$xwiki.formatDate($attachment.date)&lt;/td&gt;
+      &lt;td style="text-align: left"&gt;$escapetool.xml($attachmentsMapEntry.value)&lt;/td&gt;
+    &lt;/tr&gt;
+  #end
+  &lt;/table&gt;
+#end
+
+&lt;p&gt;Hello, admin of the wiki $wikiUrl.&lt;/p&gt;
+
+&lt;p&gt;This is an email informing you that attachment files in documents of your wiki have been detected as being infected with viruses or malware.&lt;/p&gt;
+
+&lt;p&gt;In order to remove the threat, the infected files have been automatically &lt;b&gt;DELETED&lt;/b&gt;.&lt;/p&gt;
+
+#if ($deleteFailedInfectedAttachments.size() &gt; 0)
+  &lt;p&gt;List of attachments that &lt;b&gt;FAILED&lt;/b&gt; to be deleted:&lt;/p&gt;
+  #printAttachments($deleteFailedInfectedAttachments)
+  &lt;div&gt;Please check the server logs for more information on the reason why the delete operation failed.&lt;/div&gt;
+#end
+
+#if ($deletedInfectedAttachments.size() &gt; 0)
+  &lt;p&gt;List of attachments that were successfully deleted:&lt;/p&gt;
+  #printAttachments($deletedInfectedAttachments)
+#end
+
+&lt;p&gt;Please see the &lt;a href="$adminUrl"&gt;Antivirus Administration section&lt;/a&gt; in your wiki for more options.&lt;/p&gt;
+
+&lt;p&gt;
+Thanks,&lt;br/&gt;
+XWiki Antivirus Application
+&lt;/p&gt;</html>
+    </property>
+    <property>
+      <language>en</language>
+    </property>
+    <property>
+      <subject>[VIRUS DETECTED] XWiki scheduled antivirus scan report</subject>
+    </property>
+    <property>
+      <text>#macro(printAttachments $attachmentsMap)
+#foreach ($attachmentsMapEntry in $attachmentsMap.entrySet())
+  #set ($attachment = $attachmentsMapEntry.key)
+  #set ($authorReference = $attachment.attachment.authorReference)
+  * $attachment.filename from document $attachment.document.plainTitle ($attachment.document.externalURL) uploaded by $xwiki.getPlainUserName($authorReference) ($xwiki.xWiki.getExternalURL($authorReference, 'view', $xcontext.context)) on $xwiki.formatDate($attachment.date) infected with $attachmentsMapEntry.value
+#end
+#end
+Hello, admin of the wiki $wikiUrl.
+
+This is an email informing you that attachment files in documents of your wiki have been detected as being infected with viruses or malware.
+
+In order to remove the threat, the infected files have been automatically DELETED.
+
+#if ($deleteFailedInfectedAttachments.size() &gt; 0)
+List of attachments that FAILED to be deleted:
+
+#printAttachments($deleteFailedInfectedAttachments)
+
+Please check the server logs for more information on the reason why the delete operation failed.
+
+#end
+#if ($deletedInfectedAttachments.size() &gt; 0)
+List of attachments that were successfully deleted:
+
+#printAttachments($deletedInfectedAttachments)
+
+#end
+Please see the Antivirus Administration section in your wiki for more options:
+$adminUrl
+
+Thanks,
+XWiki Antivirus Application</text>
+    </property>
+  </object>
+</xwikidoc>
