@@ -44,7 +44,7 @@
 #set ($configClass = $xwiki.getDocument('ConfigurationClass').xWikiClass)
 #set ($configObject = $configDoc.getObject($configClass.name))
 {{html clean="false"}}
-&lt;form method="post" action="${xwiki.getURL('Antivirus.Configuration', 'save')}" class='xform'&gt;
+&lt;form method="post" action="${xwiki.getURL('Antivirus.Configuration', 'save')}" class='xform half'&gt;
   &lt;div class="hidden"&gt;
     &lt;input type='hidden' name='form_token' value="$!{services.csrf.getToken()}" /&gt;
     &lt;input type='hidden' name='xredirect' value="$xwiki.getRequestURL()" /&gt;

@@ -44,7 +44,7 @@
 #set ($configClass = $xwiki.getDocument('ClamavConfigurationClass').xWikiClass)
 #set ($configObject = $configDoc.getObject($configClass.name))
 {{html clean="false"}}
-&lt;form action="$configDoc.getURL('save')" class='xform'&gt;
+&lt;form action="$configDoc.getURL('save')" class='xform half'&gt;
   &lt;dl&gt;
     &lt;dt&gt;
       &lt;label for='Antivirus.ClamavConfigurationClass_0_host'&gt;$configClass.host.translatedPrettyName&lt;/label&gt;
