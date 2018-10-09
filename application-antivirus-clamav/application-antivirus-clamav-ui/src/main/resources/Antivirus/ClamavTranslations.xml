@@ -23,7 +23,7 @@
   <web>Antivirus</web>
   <name>ClamavTranslations</name>
   <language/>
-  <defaultLanguage/>
+  <defaultLanguage>en</defaultLanguage>
   <translation>0</translation>
   <creator>xwiki:XWiki.Admin</creator>
   <creationDate>1538166717000</creationDate>
