@@ -36,7 +36,6 @@ import javax.mail.internet.MimeMessage;
 
 import org.apache.commons.collections4.IteratorUtils;
 import org.xwiki.component.annotation.Component;
-import com.xwiki.antivirus.AntivirusReportSender;
 import org.xwiki.mail.MailListener;
 import org.xwiki.mail.MailSender;
 import org.xwiki.mail.MimeMessageFactory;
@@ -48,6 +47,7 @@ import com.xpn.xwiki.XWikiContext;
 import com.xpn.xwiki.api.Attachment;
 import com.xpn.xwiki.api.Document;
 import com.xpn.xwiki.doc.XWikiAttachment;
+import com.xwiki.antivirus.AntivirusReportSender;
 
 /**
  * Default implementation for {@link AntivirusReportSender} using the Mail API.
@@ -86,6 +86,7 @@ public class DefaultAntivirusReportSender implements AntivirusReportSender
         Map<XWikiAttachment, Collection<String>> deleteFailedInfectedAttachments) throws Exception
     {
         XWikiContext context = contextProvider.get();
+        XWiki xwiki = context.getWiki();
 
         // API classes are easier to use with velocity in the template.
         Map<Attachment, Collection<String>> apiDeletedInfectedAttachments =
@@ -96,13 +97,13 @@ public class DefaultAntivirusReportSender implements AntivirusReportSender
         Map<String, Object> velocityVariables = new HashMap<>();
         velocityVariables.put("deletedInfectedAttachments", apiDeletedInfectedAttachments);
         velocityVariables.put("deleteFailedInfectedAttachments", apiDeleteFailedInfectedAttachments);
-        velocityVariables.put("wikiUrl", context.getWiki().getExternalURL("Main.WebHome", "view", context));
-        velocityVariables.put("adminUrl", context.getWiki().getExternalURL("XWiki.XWikiPreferences", "admin",
-            "editor=globaladmin&section=antivirus", context));
+        velocityVariables.put("wikiUrl", xwiki.getExternalURL("Main.WebHome", "view", context));
+        velocityVariables.put("adminUrl",
+            xwiki.getExternalURL("XWiki.XWikiPreferences", "admin", "editor=globaladmin&section=antivirus", context));
 
         Map<String, Object> templateFactoryParameters = new HashMap<>();
         templateFactoryParameters.put("type", "antivirusReport");
-        templateFactoryParameters.put("language", context.getLocale().toString());
+        templateFactoryParameters.put("language", xwiki.getDefaultLocale(context).toString());
         templateFactoryParameters.put("velocityVariables", velocityVariables);
 
         Map<String, Object> usersAndGroupsFactoryParameters = new HashMap<>();
