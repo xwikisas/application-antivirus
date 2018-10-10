@@ -182,4 +182,288 @@ Thanks,
 XWiki Antivirus Application</text>
     </property>
   </object>
+  <object>
+    <name>Antivirus.ScheduledScanReportMailTemplate</name>
+    <number>1</number>
+    <className>XWiki.Mail</className>
+    <guid>9ed554bc-8c35-491d-bc10-fe6132cbc22c</guid>
+    <class>
+      <name>XWiki.Mail</name>
+      <customClass/>
+      <customMapping/>
+      <defaultViewSheet/>
+      <defaultEditSheet/>
+      <defaultWeb/>
+      <nameField/>
+      <validationScript/>
+      <html>
+        <disabled>0</disabled>
+        <name>html</name>
+        <number>4</number>
+        <prettyName>HTML</prettyName>
+        <rows>15</rows>
+        <size>80</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.TextAreaClass</classType>
+      </html>
+      <language>
+        <disabled>0</disabled>
+        <name>language</name>
+        <number>2</number>
+        <prettyName>Language</prettyName>
+        <size>5</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.StringClass</classType>
+      </language>
+      <subject>
+        <disabled>0</disabled>
+        <name>subject</name>
+        <number>1</number>
+        <prettyName>Subject</prettyName>
+        <size>40</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.StringClass</classType>
+      </subject>
+      <text>
+        <disabled>0</disabled>
+        <name>text</name>
+        <number>3</number>
+        <prettyName>Text</prettyName>
+        <rows>15</rows>
+        <size>80</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.TextAreaClass</classType>
+      </text>
+    </class>
+    <property>
+      <html>#macro (printAttachments $attachmentsMap)
+  &lt;table&gt;
+  &lt;tr&gt;
+    &lt;th style="text-align: left"&gt;Nom du fichier&lt;/th&gt;
+    &lt;th style="text-align: left"&gt;Document&lt;/th&gt;
+    &lt;th style="text-align: left"&gt;Téléchargé par&lt;/th&gt;
+    &lt;th style="text-align: left"&gt;Date de téléchargement&lt;/th&gt;
+    &lt;th style="text-align: left"&gt;Type d'infection&lt;/th&gt;
+  &lt;/tr&gt;
+  #foreach ($attachmentsMapEntry in $attachmentsMap.entrySet())
+    #set ($attachment = $attachmentsMapEntry.key)
+    &lt;tr&gt;
+      &lt;td style="text-align: left"&gt;$escapetool.xml($attachment.filename)&lt;/td&gt;
+      &lt;td style="text-align: left"&gt;&lt;a href="$attachment.document.externalURL"&gt;$escapetool.xml($attachment.document.plainTitle)&lt;/a&gt;&lt;/td&gt;
+      #set ($authorReference = $attachment.attachment.authorReference)
+      &lt;td style="text-align: left"&gt;&lt;a href="$xwiki.xWiki.getExternalURL($authorReference, 'view', $xcontext.context)"&gt;$escapetool.xml($xwiki.getPlainUserName($authorReference))&lt;/a&gt;&lt;/td&gt;
+      &lt;td style="text-align: left"&gt;$xwiki.formatDate($attachment.date)&lt;/td&gt;
+      &lt;td style="text-align: left"&gt;$escapetool.xml($attachmentsMapEntry.value)&lt;/td&gt;
+    &lt;/tr&gt;
+  #end
+  &lt;/table&gt;
+#end
+
+&lt;p&gt;Bonjour, administrateur du wiki $wikiUrl.&lt;/p&gt;
+
+&lt;p&gt;Ceci est une notification vous informant que des pièces jointes dans des documents de votre wiki ont été détectées comme étant infectées par des virus ou des logiciels malveillants.&lt;/p&gt;
+
+&lt;p&gt;Afin de supprimer la menace, les fichiers infectés ont été automatiquement &lt;b&gt;SUPPRIMÉS&lt;/b&gt;.&lt;/p&gt;
+
+#if ($deleteFailedInfectedAttachments.size() &gt; 0)
+  &lt;p&gt;Liste des pièces jointes qui ont &lt;b&gt;ÉCHOUÉ&lt;/b&gt; à supprimer:&lt;/p&gt;
+  #printAttachments($deleteFailedInfectedAttachments)
+  &lt;div&gt;Consultez les journaux du serveur pour plus d'informations sur la raison de l'échec de l'opération de suppression.&lt;/div&gt;
+#end
+
+#if ($deletedInfectedAttachments.size() &gt; 0)
+  &lt;p&gt;Liste des pièces jointes supprimées avec succès:&lt;/p&gt;
+  #printAttachments($deletedInfectedAttachments)
+#end
+
+&lt;p&gt;Veuillez consulter &lt;a href="$adminUrl"&gt;la section d'administration Antivirus&lt;/a&gt; de votre wiki pour plus d'options.&lt;/p&gt;
+
+&lt;p&gt;
+Cordialement,&lt;br/&gt;
+L'application d'Antivirus pour XWiki
+&lt;/p&gt;</html>
+    </property>
+    <property>
+      <language>fr</language>
+    </property>
+    <property>
+      <subject>[VIRUS DÉTECTÉ] Rapport d'analyse antivirus planifié XWiki</subject>
+    </property>
+    <property>
+      <text>#macro(printAttachments $attachmentsMap)
+#foreach ($attachmentsMapEntry in $attachmentsMap.entrySet())
+  #set ($attachment = $attachmentsMapEntry.key)
+  #set ($authorReference = $attachment.attachment.authorReference)
+  * $attachment.filename du document $attachment.document.plainTitle ($attachment.document.externalURL) chargé par $xwiki.getPlainUserName($authorReference) ($xwiki.xWiki.getExternalURL($authorReference, 'view', $xcontext.context)) à $xwiki.formatDate($attachment.date) infecté par $attachmentsMapEntry.value
+#end
+#end
+Bonjour, administrateur du wiki $wikiUrl.
+
+Ceci est une notification vous informant que des pièces jointes dans des documents de votre wiki ont été détectées comme étant infectées par des virus ou des logiciels malveillants.
+
+Afin de supprimer la menace, les fichiers infectés ont été automatiquement SUPPRIMÉS.
+
+#if ($deleteFailedInfectedAttachments.size() &gt; 0)
+Liste des pièces jointes qui ont ÉCHOUÉ à supprimer:
+
+#printAttachments($deleteFailedInfectedAttachments)
+
+Consultez les journaux du serveur pour plus d'informations sur la raison de l'échec de l'opération de suppression.
+
+#end
+#if ($deletedInfectedAttachments.size() &gt; 0)
+Liste des pièces jointes supprimées avec succès:
+
+#printAttachments($deletedInfectedAttachments)
+
+#end
+Veuillez consulter la section d'administration Antivirus de votre wiki pour plus d'options:
+$adminUrl
+
+Cordialement,
+L'application d'Antivirus pour XWiki</text>
+    </property>
+  </object>
+  <object>
+    <name>Antivirus.ScheduledScanReportMailTemplate</name>
+    <number>2</number>
+    <className>XWiki.Mail</className>
+    <guid>38c8c7c6-9774-4295-a9e5-970936390392</guid>
+    <class>
+      <name>XWiki.Mail</name>
+      <customClass/>
+      <customMapping/>
+      <defaultViewSheet/>
+      <defaultEditSheet/>
+      <defaultWeb/>
+      <nameField/>
+      <validationScript/>
+      <html>
+        <disabled>0</disabled>
+        <name>html</name>
+        <number>4</number>
+        <prettyName>HTML</prettyName>
+        <rows>15</rows>
+        <size>80</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.TextAreaClass</classType>
+      </html>
+      <language>
+        <disabled>0</disabled>
+        <name>language</name>
+        <number>2</number>
+        <prettyName>Language</prettyName>
+        <size>5</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.StringClass</classType>
+      </language>
+      <subject>
+        <disabled>0</disabled>
+        <name>subject</name>
+        <number>1</number>
+        <prettyName>Subject</prettyName>
+        <size>40</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.StringClass</classType>
+      </subject>
+      <text>
+        <disabled>0</disabled>
+        <name>text</name>
+        <number>3</number>
+        <prettyName>Text</prettyName>
+        <rows>15</rows>
+        <size>80</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.TextAreaClass</classType>
+      </text>
+    </class>
+    <property>
+      <html>#macro (printAttachments $attachmentsMap)
+  &lt;table&gt;
+  &lt;tr&gt;
+    &lt;th style="text-align: left"&gt;Nume fişier&lt;/th&gt;
+    &lt;th style="text-align: left"&gt;Document&lt;/th&gt;
+    &lt;th style="text-align: left"&gt;Ataşat de&lt;/th&gt;
+    &lt;th style="text-align: left"&gt;Data ataşării&lt;/th&gt;
+    &lt;th style="text-align: left"&gt;Tipul infecţiei&lt;/th&gt;
+  &lt;/tr&gt;
+  #foreach ($attachmentsMapEntry in $attachmentsMap.entrySet())
+    #set ($attachment = $attachmentsMapEntry.key)
+    &lt;tr&gt;
+      &lt;td style="text-align: left"&gt;$escapetool.xml($attachment.filename)&lt;/td&gt;
+      &lt;td style="text-align: left"&gt;&lt;a href="$attachment.document.externalURL"&gt;$escapetool.xml($attachment.document.plainTitle)&lt;/a&gt;&lt;/td&gt;
+      #set ($authorReference = $attachment.attachment.authorReference)
+      &lt;td style="text-align: left"&gt;&lt;a href="$xwiki.xWiki.getExternalURL($authorReference, 'view', $xcontext.context)"&gt;$escapetool.xml($xwiki.getPlainUserName($authorReference))&lt;/a&gt;&lt;/td&gt;
+      &lt;td style="text-align: left"&gt;$xwiki.formatDate($attachment.date)&lt;/td&gt;
+      &lt;td style="text-align: left"&gt;$escapetool.xml($attachmentsMapEntry.value)&lt;/td&gt;
+    &lt;/tr&gt;
+  #end
+  &lt;/table&gt;
+#end
+
+&lt;p&gt;Bună, administrator al wiki-ului $wikiUrl.&lt;/p&gt;
+
+&lt;p&gt;Acest mesaj vă informează în legatură cu faptul că fişiere ataşate la documente din wiki-ul dumneavoastră au fost detectate drept infectate cu virusuri sau programe malware.&lt;/p&gt;
+
+&lt;p&gt;Pentru a îndepărta pericolul, fişierele infectate au fost în mod automat &lt;b&gt;ŞTERSE&lt;/b&gt;.&lt;/p&gt;
+
+#if ($deleteFailedInfectedAttachments.size() &gt; 0)
+  &lt;p&gt;Lista de ataşamente pentru care ştergerea a &lt;b&gt;EŞUAT&lt;/b&gt;:&lt;/p&gt;
+  #printAttachments($deleteFailedInfectedAttachments)
+  &lt;div&gt;Verificaţi jurnalele server-ului pentru mai multe informaţii despre motivul pentru care operaţiuna de ştergere a eşuat.&lt;/div&gt;
+#end
+
+#if ($deletedInfectedAttachments.size() &gt; 0)
+  &lt;p&gt;Lista de ataşamente care au fost şterse cu succes:&lt;/p&gt;
+  #printAttachments($deletedInfectedAttachments)
+#end
+
+&lt;p&gt;Pentru mai multe opţiuni, consultaţi &lt;a href="$adminUrl"&gt;secţiunea de administrare Antivirus&lt;/a&gt; din wiki-ul dumneavoastră.&lt;/p&gt;
+
+&lt;p&gt;
+Vă mulţumim,&lt;br/&gt;
+Aplicaţia de Antivirus pentru XWiki
+&lt;/p&gt;</html>
+    </property>
+    <property>
+      <language>ro</language>
+    </property>
+    <property>
+      <subject>[VIRUS DETECTAT] Raport scanare periodică antivirus XWiki</subject>
+    </property>
+    <property>
+      <text>#macro(printAttachments $attachmentsMap)
+#foreach ($attachmentsMapEntry in $attachmentsMap.entrySet())
+  #set ($attachment = $attachmentsMapEntry.key)
+  #set ($authorReference = $attachment.attachment.authorReference)
+  * $attachment.filename din documentul $attachment.document.plainTitle ($attachment.document.externalURL) ataşat de $xwiki.getPlainUserName($authorReference) ($xwiki.xWiki.getExternalURL($authorReference, 'view', $xcontext.context)) pe $xwiki.formatDate($attachment.date) infectat cu $attachmentsMapEntry.value
+#end
+#end
+Bună, administrator al wiki-ului $wikiUrl.
+
+Acest mesaj vă informează în legatură cu faptul că fişiere ataşate la documente din wiki-ul dumneavoastră au fost detectate drept infectate cu virusuri sau programe malware.
+
+Pentru a îndepărta pericolul, fişierele infectate au fost în mod automat ŞTERSE.
+
+#if ($deleteFailedInfectedAttachments.size() &gt; 0)
+Lista de ataşamente pentru care ştergerea a EŞUAT:
+
+#printAttachments($deleteFailedInfectedAttachments)
+
+Verificaţi jurnalele server-ului pentru mai multe informaţii despre motivul pentru care operaţiuna de ştergere a eşuat.
+
+#end
+#if ($deletedInfectedAttachments.size() &gt; 0)
+Lista de ataşamente care au fost şterse cu succes:
+
+#printAttachments($deletedInfectedAttachments)
+
+#end
+Pentru mai multe opţiuni, consultaţi secţiunea de administrare Antivirus din wiki-ul dumneavoastră:
+$adminUrl
+
+Vă mulţumim,
+Aplicaţia de Antivirus pentru XWiki</text>
+    </property>
+  </object>
 </xwikidoc>
