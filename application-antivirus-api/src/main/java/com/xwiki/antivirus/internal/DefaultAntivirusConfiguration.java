@@ -25,6 +25,7 @@ import javax.inject.Singleton;
 
 import org.xwiki.component.annotation.Component;
 import org.xwiki.configuration.ConfigurationSource;
+
 import com.xwiki.antivirus.AntivirusConfiguration;
 
 /**

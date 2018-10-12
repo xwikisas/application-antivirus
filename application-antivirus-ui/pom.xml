@@ -37,6 +37,37 @@
     <xwiki.extension.namespaces>wiki:xwiki</xwiki.extension.namespaces>
   </properties>
   <dependencies>
+    <!-- ConfigurableClass -->
+    <dependency>
+      <groupId>org.xwiki.platform</groupId>
+      <artifactId>xwiki-platform-administration-ui</artifactId>
+      <version>${platform.version}</version>
+      <type>xar</type>
+    </dependency>
+    <!-- $services.uix -->
+    <dependency>
+      <groupId>org.xwiki.platform</groupId>
+      <artifactId>xwiki-platform-uiextension-api</artifactId>
+      <version>${platform.version}</version>
+    </dependency>
+    <!-- $services.localization -->
+    <dependency>
+      <groupId>org.xwiki.platform</groupId>
+      <artifactId>xwiki-platform-localization-script</artifactId>
+      <version>${platform.version}</version>
+    </dependency>
+    <!-- $services.csrf -->
+    <dependency>
+      <groupId>org.xwiki.platform</groupId>
+      <artifactId>xwiki-platform-csrf</artifactId>
+      <version>${platform.version}</version>
+    </dependency>
+    <!-- $services.rendering -->
+    <dependency>
+      <groupId>org.xwiki.platform</groupId>
+      <artifactId>xwiki-platform-rendering-xwiki</artifactId>
+      <version>${platform.version}</version>
+    </dependency>
     <dependency>
       <groupId>com.xwiki.antivirus</groupId>
       <artifactId>application-antivirus-api</artifactId>

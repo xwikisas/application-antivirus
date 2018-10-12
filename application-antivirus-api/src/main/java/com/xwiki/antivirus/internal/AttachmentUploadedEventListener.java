@@ -89,7 +89,8 @@ public class AttachmentUploadedEventListener extends AbstractEventListener
         // Skip if scanning is disabled.
         if (!antivirusConfiguration.isEnabled()) {
             if (logger.isDebugEnabled()) {
-                logger.debug("Skipping attachment scan for event [{}] by user [{}] on document [{}]",
+                logger.debug(
+                    "Skipping attachment scan for event [{}] by user [{}] on document [{}]. Antivirus is disabled.",
                     event.getClass().getName(), context.getUserReference(), doc.getDocumentReference());
             }
             return;
@@ -116,7 +117,8 @@ public class AttachmentUploadedEventListener extends AbstractEventListener
         // Cancel the event if we have detected any infections.
         if (infectedAttachments.size() > 0) {
             ((CancelableEvent) event)
-                .cancel(String.format("Virus or malware infections found for attachments: [%s]", infectedAttachments));
+                .cancel(String.format("Virus or malware infections found for attachments [%s] uploaded by user [%s]",
+                    infectedAttachments, context.getUserReference()));
         }
     }
 
