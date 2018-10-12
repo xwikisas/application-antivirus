@@ -65,11 +65,5 @@
       <artifactId>xwiki-platform-csrf</artifactId>
       <version>${platform.version}</version>
     </dependency>
-    <!-- This extension requires a license to work. -->
-    <dependency>
-      <groupId>com.xwiki.licensing</groupId>
-      <artifactId>application-licensing-licensor-api</artifactId>
-      <version>${licensing.version}</version>
-    </dependency>
   </dependencies>
 </project>
