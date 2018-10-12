@@ -50,10 +50,10 @@
     <module>application-antivirus-ui</module>
     <module>application-antivirus-clamav</module>
   </modules>
-  <!-- Even though this repository is already declared in the parent POM, the parent POM itself is published in the store 
-    repository, which needs to be declared before we can use it (to retrieve the actual parent POM). This makes it simpler to 
-    build this project without having to declare this repository in one's own Maven settings.xml file. In the future We may decide 
-    to remove this in the future and make it a rule to have the XWiki SAS Nexus repository in one's settings.xml -->
+  <!-- Even though this repository is already declared in the parent POM, the parent POM itself is published in the store
+    repository, which needs to be declared before we can use it (to retrieve the actual parent POM). This makes it simpler to
+    build this project without having to declare this repository in one's own Maven settings.xml file. We may decide to remove
+    this in the future and make it a rule to have the XWiki SAS Nexus repository in one's settings.xml -->
   <repositories>
     <repository>
       <id>public-store-releases</id>

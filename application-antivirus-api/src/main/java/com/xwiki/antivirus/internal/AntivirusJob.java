@@ -68,8 +68,7 @@ public class AntivirusJob extends AbstractJob
         AntivirusConfiguration antivirusConfiguration = Utils.getComponent(AntivirusConfiguration.class);
         if (!antivirusConfiguration.isEnabled()) {
             if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("Antivirus scan on wiki [{}] is disabled. Scheduled job execution is skipped.",
-                    context.getWikiId());
+                LOGGER.debug("Scheduled Antirvirus scan is skipped. Antivirus is disabled.");
             }
             return;
         }
