@@ -39,7 +39,7 @@ import org.xwiki.component.annotation.Component;
 import org.xwiki.mail.MailListener;
 import org.xwiki.mail.MailSender;
 import org.xwiki.mail.MimeMessageFactory;
-import org.xwiki.mail.internal.SessionFactory;
+import org.xwiki.mail.SessionFactory;
 import org.xwiki.model.reference.DocumentReference;
 
 import com.xpn.xwiki.XWiki;
@@ -117,7 +117,7 @@ public class DefaultAntivirusReportSender implements AntivirusReportSender
         Session session = sessionFactory.create(Collections.<String, String>emptyMap());
 
         Iterator<MimeMessage> messages =
-            usersAndGroupsMessageFactory.createMessage(session, usersOrGroups, usersAndGroupsFactoryParameters);
+            usersAndGroupsMessageFactory.createMessage(usersOrGroups, usersAndGroupsFactoryParameters);
 
         mailSender.sendAsynchronously(IteratorUtils.toList(messages), session, mailListener);
     }

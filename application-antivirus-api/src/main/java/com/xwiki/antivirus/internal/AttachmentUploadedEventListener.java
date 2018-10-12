@@ -36,12 +36,9 @@ import org.xwiki.bridge.event.DocumentUpdatingEvent;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.component.manager.ComponentLookupException;
 import org.xwiki.component.manager.ComponentManager;
-import com.xwiki.antivirus.AntivirusConfiguration;
-import com.xwiki.antivirus.AntivirusEngine;
-import com.xwiki.antivirus.AntivirusException;
-import com.xwiki.antivirus.ScanResult;
 import org.xwiki.diff.Delta.Type;
 import org.xwiki.model.reference.AttachmentReference;
+import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.observation.AbstractEventListener;
 import org.xwiki.observation.event.CancelableEvent;
 import org.xwiki.observation.event.Event;
@@ -50,6 +47,11 @@ import com.xpn.xwiki.XWikiContext;
 import com.xpn.xwiki.doc.AttachmentDiff;
 import com.xpn.xwiki.doc.XWikiAttachment;
 import com.xpn.xwiki.doc.XWikiDocument;
+import com.xwiki.antivirus.AntivirusConfiguration;
+import com.xwiki.antivirus.AntivirusEngine;
+import com.xwiki.antivirus.AntivirusException;
+import com.xwiki.antivirus.ScanResult;
+import com.xwiki.licensing.Licensor;
 
 /**
  * Listener for whenever an attachment is added to or updated on a document. Each time, each affected attachment is
@@ -67,6 +69,9 @@ public class AttachmentUploadedEventListener extends AbstractEventListener
 
     @Inject
     private AntivirusConfiguration antivirusConfiguration;
+
+    @Inject
+    private Licensor licensor;
 
     @Inject
     private Logger logger;
@@ -96,6 +101,21 @@ public class AttachmentUploadedEventListener extends AbstractEventListener
             return;
         }
 
+        List<XWikiAttachment> attachmentsToScan = getAttachmentsToScan(event, doc, context);
+
+        // Skip if no attachments were added or modified.
+        if (attachmentsToScan.isEmpty()) {
+            return;
+        }
+
+        // Skip if the license has expired.
+        if (!licensor.hasLicensure(new DocumentReference(context.getMainXWiki(), "Antivirus", "ConfigurationClass"))) {
+            logger.warn("Skipping attachment scan for event [{}] by user [{}] on document [{}]. "
+                + "No valid Antivirus license has been found. Please visit the 'Licenses' section in Administration.",
+                event.getClass().getName(), context.getUserReference(), doc.getDocumentReference());
+            return;
+        }
+
         // Get the configured antivirus engine.
         AntivirusEngine antivirus = null;
         try {
@@ -108,8 +128,6 @@ public class AttachmentUploadedEventListener extends AbstractEventListener
                 doc.getDocumentReference(), e);
             return;
         }
-
-        List<XWikiAttachment> attachmentsToScan = getAttachmentsToScan(event, doc, context);
 
         Map<AttachmentReference, Collection<String>> infectedAttachments =
             scan(event, context, antivirus, attachmentsToScan);

@@ -26,7 +26,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.quartz.JobDataMap;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import org.slf4j.Logger;
@@ -49,6 +48,7 @@ import com.xwiki.antivirus.AntivirusConfiguration;
 import com.xwiki.antivirus.AntivirusEngine;
 import com.xwiki.antivirus.AntivirusReportSender;
 import com.xwiki.antivirus.ScanResult;
+import com.xwiki.licensing.Licensor;
 
 /**
  * Periodically runs an antivirus scan on all attachments in the wiki.
@@ -62,14 +62,21 @@ public class AntivirusJob extends AbstractJob
     @Override
     protected void executeJob(JobExecutionContext jobContext) throws JobExecutionException
     {
-        JobDataMap data = jobContext.getJobDetail().getJobDataMap();
-        XWikiContext context = (XWikiContext) data.get("context");
+        XWikiContext context = getXWikiContext();
 
         AntivirusConfiguration antivirusConfiguration = Utils.getComponent(AntivirusConfiguration.class);
         if (!antivirusConfiguration.isEnabled()) {
             if (LOGGER.isDebugEnabled()) {
                 LOGGER.debug("Scheduled Antirvirus scan is skipped. Antivirus is disabled.");
             }
+            return;
+        }
+
+        // Skip if license has expired.
+        Licensor licensor = Utils.getComponent(Licensor.class);
+        if (!licensor.hasLicensure(new DocumentReference(context.getMainXWiki(), "Antivirus", "ConfigurationClass"))) {
+            LOGGER.warn("Scheduled Antivirus scan is skipped. "
+                + "No valid Antivirus license has been found. Please visit the 'Licenses' section in Administration.");
             return;
         }
 
@@ -101,7 +108,7 @@ public class AntivirusJob extends AbstractJob
         }
 
         for (String wikiId : wikiIds) {
-            scanWiki(wikiId, antivirus, deletedInfectedAttachments, deleteFailedInfectedAttachments, context);
+            scanWiki(wikiId, antivirus, deletedInfectedAttachments, deleteFailedInfectedAttachments);
         }
 
         // Send the report by email, if needed.
@@ -115,7 +122,7 @@ public class AntivirusJob extends AbstractJob
 
     private void scanWiki(String wikiId, AntivirusEngine antivirus,
         Map<XWikiAttachment, Collection<String>> deletedInfectedAttachments,
-        Map<XWikiAttachment, Collection<String>> deleteFailedInfectedAttachments, XWikiContext context)
+        Map<XWikiAttachment, Collection<String>> deleteFailedInfectedAttachments)
     {
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug("Scanning wiki [{}]...", wikiId);
@@ -140,15 +147,15 @@ public class AntivirusJob extends AbstractJob
         WikiReference wikiReference = new WikiReference(wikiId);
         for (String docFullName : docsWithAttachments) {
             DocumentReference documentReference = resolver.resolve(docFullName, wikiReference);
-            scanDocument(documentReference, antivirus, deletedInfectedAttachments, deleteFailedInfectedAttachments,
-                context);
+            scanDocument(documentReference, antivirus, deletedInfectedAttachments, deleteFailedInfectedAttachments);
         }
     }
 
     private void scanDocument(DocumentReference documentReference, AntivirusEngine antivirus,
         Map<XWikiAttachment, Collection<String>> deletedInfectedAttachments,
-        Map<XWikiAttachment, Collection<String>> deleteFailedInfectedAttachments, XWikiContext context)
+        Map<XWikiAttachment, Collection<String>> deleteFailedInfectedAttachments)
     {
+        XWikiContext context = getXWikiContext();
         XWiki xwiki = context.getWiki();
 
         if (LOGGER.isDebugEnabled()) {

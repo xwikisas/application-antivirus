@@ -44,7 +44,9 @@
 Antivirus.ConfigurationClass_enabled=Enabled
 Antivirus.ConfigurationClass_enabled_hint=If antivirus scanning is enabled, for any of the attachment uploading, page creation or scheduled full-wiki scan operations.
 Antivirus.ConfigurationClass_defaultEngineName=Default Antivirus
-Antivirus.ConfigurationClass_defaultEngineName_hint=The antivirus engine to use during scanning. Use the Extension Manager to search for other implementations that you can install and use.</content>
+Antivirus.ConfigurationClass_defaultEngineName_hint=The antivirus engine to use during scanning. Use the Extension Manager to search for other implementations that you can install and use.
+
+antivirus.extension.name=Antivirus Application</content>
   <object>
     <name>Antivirus.Translations</name>
     <number>0</number>

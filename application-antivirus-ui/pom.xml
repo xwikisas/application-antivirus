@@ -35,6 +35,19 @@
     <xwiki.extension.category>application</xwiki.extension.category>
     <!-- Configuration and other UI must be installed on the main wiki only. -->
     <xwiki.extension.namespaces>wiki:xwiki</xwiki.extension.namespaces>
+    <!-- License excluded documents:
+         * Administration for ConfigurableClass to work and display it in Administration (needs edit rights)
+         ** Also useful for having view rights in order to display a message in case of invalid license
+         * AntivirusJob to be editable by admins (to change the cron expression)
+         * Configuration to be editable by admins
+         * WebPreferences to be editable by admins
+         -->
+    <xwiki.extension.licensing.excludedDocuments>
+      Antivirus.Administration,
+      Antivirus.AntivirusJob,
+      Antivirus.Configuration,
+      Antivirus.WebPreferences
+    </xwiki.extension.licensing.excludedDocuments>
   </properties>
   <dependencies>
     <!-- ConfigurableClass -->
@@ -72,6 +85,14 @@
       <groupId>com.xwiki.antivirus</groupId>
       <artifactId>application-antivirus-api</artifactId>
       <version>${project.version}</version>
+    </dependency>
+    <!-- Make this extension require a license so we can easily query if the inherited license (from the installed
+         implementation) is valid or not by using the reference licensor's reference API instead of extensionId API 
+         (which needs more precise coordinates that require more code to find out, like the extension's version). -->
+    <dependency>
+      <groupId>com.xwiki.licensing</groupId>
+      <artifactId>application-licensing-licensor-api</artifactId>
+      <version>${licensing.version}</version>
     </dependency>
   </dependencies>
 </project>
