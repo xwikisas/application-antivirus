@@ -40,9 +40,9 @@
   <syntaxId>xwiki/2.1</syntaxId>
   <hidden>true</hidden>
   <content>{{velocity}}
-#set ($discard = $xwiki.ssx.use($doc.fullName))
-#set ($configDoc = $xwiki.getDocument('Configuration'))
-#set ($configClass = $xwiki.getDocument('ConfigurationClass').xWikiClass)
+#set ($discard = $xwiki.ssx.use('Antivirus.Administration'))
+#set ($configDoc = $xwiki.getDocument('Antivirus.Configuration'))
+#set ($configClass = $xwiki.getDocument('Antivirus.ConfigurationClass').xWikiClass)
 #set ($configObject = $configDoc.getObject($configClass.name))
 
 == General ==
@@ -308,10 +308,7 @@
       <linkPrefix/>
     </property>
     <property>
-      <propertiesToShow>
-        <value>enabled</value>
-        <value>defaultAntivirusName</value>
-      </propertiesToShow>
+      <propertiesToShow/>
     </property>
     <property>
       <sectionOrder/>
