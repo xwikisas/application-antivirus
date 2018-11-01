@@ -44,5 +44,48 @@
 Antivirus.ConfigurationClass_enabled=Activé
 Antivirus.ConfigurationClass_enabled_hint=Si l'analyse antivirus est activée, pour toutes les opérations de téléchargement de pièce jointe, de création de page ou d'analyse planifiée de tout le wiki.
 Antivirus.ConfigurationClass_defaultEngineName=Antivirus par défaut
-Antivirus.ConfigurationClass_defaultEngineName_hint=Le moteur antivirus à utiliser lors de l'analyse. Utilisez Extension Manager pour rechercher d'autres implémentations que vous pouvez installer et utiliser.</content>
+Antivirus.ConfigurationClass_defaultEngineName_hint=Le moteur antivirus à utiliser lors de l'analyse. Utilisez Extension Manager pour rechercher d'autres implémentations que vous pouvez installer et utiliser.
+
+antivirus.log.title=Journal des incidents antivirus
+antivirus.log.deletedMarker=(supprimé)
+
+antivirus.log.incident.title=Incident: {0}
+
+antivirus.log.index.attachmentName=Nom du fichier
+antivirus.log.index.attachmentInfections=Infections
+antivirus.log.index.incidentAction=Statut
+antivirus.log.index.incidentDate=Date de la détection
+antivirus.log.index.incidentContext=Contexte
+antivirus.log.index.attachmentDocument=Page
+antivirus.log.index.attachmentDate=Date de la pièce jointe
+antivirus.log.index.attachmentAuthor=Téléchargé par
+antivirus.log.index._actions=Actions
+antivirus.log.index._actions.delete=Supprimer
+antivirus.log.index._actions.deleteall=Supprimer tout
+
+Antivirus.AntivirusIncidentClass_CidentAction_blocked=Bloqué
+Antivirus.AntivirusIncidentClass_incidentAction_deleted=Supprimé
+Antivirus.AntivirusIncidentClass_CidentAction_deleteFailed=Suppression échoué
+Antivirus.AntivirusIncidentClass_incidentContext_upload=Téléchargement
+Antivirus.AntivirusIncidentClass_CidentContext_ScheduledScan=Analyse planifiée
+
+antivirus.log.actions.notSupported=L'action n'est pas supportée.
+antivirus.log.actions.notSpecified=Aucune action n'a été spécifiée.
+
+antivirus.log.actions.deleteall=Supprimer tous les incidents
+antivirus.log.actions.deleteall.success=Incidents supprimés avec succès.
+antivirus.log.actions.deleteall.failure=Impossible de supprimer les incidents suivants ({0}):
+
+antivirus.log.actions.delete.confirm.title=Confirmer la suppression
+antivirus.log.actions.delete.confirm.question=Êtes-vous sûr de vouloir supprimer cet incident?
+antivirus.log.actions.delete.confirm.button=Supprimer
+
+antivirus.log.actions.deleteall.confirm.title=Confirmer supprimer tout
+antivirus.log.actions.deleteall.confirm.question=Êtes-vous sûr de vouloir supprimer tous les incidents du journal?
+antivirus.log.actions.deleteall.confirm.button=Supprimer tout
+antivirus.log.actions.confirmModal.cancelButton=Annuler
+
+antivirus.log.actions.status.delete.inProgress=Suppression en cours ...
+antivirus.log.actions.status.delete.done=Supprimé
+antivirus.log.actions.status.delete.failed=Suppression échoué</content>
 </xwikidoc>

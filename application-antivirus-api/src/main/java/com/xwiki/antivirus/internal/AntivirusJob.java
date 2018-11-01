@@ -47,6 +47,8 @@ import com.xpn.xwiki.plugin.scheduler.AbstractJob;
 import com.xpn.xwiki.web.Utils;
 import com.xwiki.antivirus.AntivirusConfiguration;
 import com.xwiki.antivirus.AntivirusEngine;
+import com.xwiki.antivirus.AntivirusException;
+import com.xwiki.antivirus.AntivirusLog;
 import com.xwiki.antivirus.AntivirusReportSender;
 import com.xwiki.antivirus.ScanResult;
 
@@ -106,6 +108,10 @@ public class AntivirusJob extends AbstractJob
 
         // Send the report by email, if needed.
         maybeSendReport(deletedInfectedAttachments, deleteFailedInfectedAttachments);
+
+        // Log the incidents in the Antivirus Log.
+        logIncidents(deletedInfectedAttachments, deleteFailedInfectedAttachments,
+            antivirusConfiguration.getDefaultEngineName());
 
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug("Antivirus scheduled scan execution using engine [{}] has finished.",
@@ -258,5 +264,26 @@ public class AntivirusJob extends AbstractJob
         }
 
         return attachmentReferenceMap;
+    }
+
+    private void logIncidents(Map<XWikiAttachment, Collection<String>> deletedInfectedAttachments,
+        Map<XWikiAttachment, Collection<String>> deleteFailedInfectedAttachments, String engineHint)
+    {
+        AntivirusLog antivirusLog = Utils.getComponent(AntivirusLog.class);
+
+        logIncidents(antivirusLog, deletedInfectedAttachments, "deleted", engineHint);
+        logIncidents(antivirusLog, deleteFailedInfectedAttachments, "deleteFailed", engineHint);
+    }
+
+    private void logIncidents(AntivirusLog antivirusLog, Map<XWikiAttachment, Collection<String>> infectedAttachments,
+        String action, String engineHint)
+    {
+        for (Map.Entry<XWikiAttachment, Collection<String>> entry : infectedAttachments.entrySet()) {
+            try {
+                antivirusLog.log(entry.getKey(), entry.getValue(), action, "scheduledScan", engineHint);
+            } catch (AntivirusException e) {
+                LOGGER.error("Failed to log scheduled scan incident", e);
+            }
+        }
     }
 }

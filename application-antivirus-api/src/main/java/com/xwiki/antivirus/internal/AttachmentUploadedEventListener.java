@@ -36,10 +36,6 @@ import org.xwiki.bridge.event.DocumentUpdatingEvent;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.component.manager.ComponentLookupException;
 import org.xwiki.component.manager.ComponentManager;
-import com.xwiki.antivirus.AntivirusConfiguration;
-import com.xwiki.antivirus.AntivirusEngine;
-import com.xwiki.antivirus.AntivirusException;
-import com.xwiki.antivirus.ScanResult;
 import org.xwiki.diff.Delta.Type;
 import org.xwiki.model.reference.AttachmentReference;
 import org.xwiki.observation.AbstractEventListener;
@@ -50,6 +46,11 @@ import com.xpn.xwiki.XWikiContext;
 import com.xpn.xwiki.doc.AttachmentDiff;
 import com.xpn.xwiki.doc.XWikiAttachment;
 import com.xpn.xwiki.doc.XWikiDocument;
+import com.xwiki.antivirus.AntivirusConfiguration;
+import com.xwiki.antivirus.AntivirusEngine;
+import com.xwiki.antivirus.AntivirusException;
+import com.xwiki.antivirus.AntivirusLog;
+import com.xwiki.antivirus.ScanResult;
 
 /**
  * Listener for whenever an attachment is added to or updated on a document. Each time, each affected attachment is
@@ -67,6 +68,9 @@ public class AttachmentUploadedEventListener extends AbstractEventListener
 
     @Inject
     private AntivirusConfiguration antivirusConfiguration;
+
+    @Inject
+    private AntivirusLog antivirusLog;
 
     @Inject
     private Logger logger;
@@ -139,6 +143,10 @@ public class AttachmentUploadedEventListener extends AbstractEventListener
                 logger.warn("Attachment [{}] found infected with [{}] during event [{}] by user [{}]",
                     attachment.getReference(), scanResult.getfoundViruses(), event.getClass().getName(),
                     context.getUserReference());
+
+                // Save the incident in the log.
+                antivirusLog.log(attachment, scanResult.getfoundViruses(), "blocked", "upload",
+                    antivirusConfiguration.getDefaultEngineName());
             } catch (AntivirusException e) {
                 logger.error("Failed to scan attachment [{}] during event [{}] by user [{}]", attachment.getReference(),
                     event.getClass().getName(), context.getUserReference(), e);

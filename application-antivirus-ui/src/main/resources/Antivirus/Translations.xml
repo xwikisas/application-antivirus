@@ -44,7 +44,50 @@
 Antivirus.ConfigurationClass_enabled=Enabled
 Antivirus.ConfigurationClass_enabled_hint=If antivirus scanning is enabled, for any of the attachment uploading, page creation or scheduled full-wiki scan operations.
 Antivirus.ConfigurationClass_defaultEngineName=Default Antivirus
-Antivirus.ConfigurationClass_defaultEngineName_hint=The antivirus engine to use during scanning. Use the Extension Manager to search for other implementations that you can install and use.</content>
+Antivirus.ConfigurationClass_defaultEngineName_hint=The antivirus engine to use during scanning. Use the Extension Manager to search for other implementations that you can install and use.
+
+antivirus.log.title=Antivirus Incidents Log
+antivirus.log.deletedMarker=(deleted)
+
+antivirus.log.incident.title=Incident: {0}
+
+antivirus.log.index.attachmentName=Filename
+antivirus.log.index.attachmentInfections=Infections
+antivirus.log.index.incidentAction=Status
+antivirus.log.index.incidentDate=Detection Date
+antivirus.log.index.incidentContext=Context
+antivirus.log.index.attachmentDocument=Page
+antivirus.log.index.attachmentDate=Attachment Date
+antivirus.log.index.attachmentAuthor=Uploaded by
+antivirus.log.index._actions=Actions
+antivirus.log.index._actions.delete=Delete
+antivirus.log.index._actions.deleteall=Delete All
+
+Antivirus.AntivirusIncidentClass_incidentAction_blocked=Blocked
+Antivirus.AntivirusIncidentClass_incidentAction_deleted=Deleted
+Antivirus.AntivirusIncidentClass_incidentAction_deleteFailed=Delete Failed
+Antivirus.AntivirusIncidentClass_incidentContext_upload=Upload
+Antivirus.AntivirusIncidentClass_incidentContext_scheduledScan=Scheduled Scan
+
+antivirus.log.actions.notSupported=Action not supported.
+antivirus.log.actions.notSpecified=No action was specified.
+
+antivirus.log.actions.deleteall=Delete All Incidents
+antivirus.log.actions.deleteall.success=Incidents successfully deleted.
+antivirus.log.actions.deleteall.failure=Failed to delete the following incidents ({0}):
+
+antivirus.log.actions.delete.confirm.title=Confirm Delete
+antivirus.log.actions.delete.confirm.question=Are you sure you want to delete this incident?
+antivirus.log.actions.delete.confirm.button=Delete
+
+antivirus.log.actions.deleteall.confirm.title=Confirm Delete All
+antivirus.log.actions.deleteall.confirm.question=Are you sure you wish to delete all incidents from the log?
+antivirus.log.actions.deleteall.confirm.button=Delete All
+antivirus.log.actions.confirmModal.cancelButton=Cancel
+
+antivirus.log.actions.status.delete.inProgress=Deleting...
+antivirus.log.actions.status.delete.done=Deleted
+antivirus.log.actions.status.delete.failed=Failed to delete</content>
   <object>
     <name>Antivirus.Translations</name>
     <number>0</number>
