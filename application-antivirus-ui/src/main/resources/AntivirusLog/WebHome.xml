@@ -77,7 +77,7 @@
 
 {{velocity}}
 {{html}}
-&lt;div class="modal fade" id="deleteIncidentModal" tabindex="-1" role="dialog" aria-labelledby="deleteIncidentModalLabel"&gt;
+&lt;div class="modal fade" id="deleteIncidentModal" tabindex="-1" role="dialog" aria-labelledby="deleteIncidentModalLabel" data-csrf="${services.csrf.getToken()}"&gt;
   &lt;div class="modal-dialog" role="document"&gt;
     &lt;div class="modal-content"&gt;
       &lt;div class="modal-header"&gt;
@@ -89,7 +89,7 @@
       &lt;/div&gt;
       &lt;div class="modal-footer"&gt;
         &lt;button type="button" class="btn btn-default" data-dismiss="modal"&gt;$services.localization.render('antivirus.log.actions.confirmModal.cancelButton')&lt;/button&gt;
-        &lt;a href="#" class="btn btn-danger"&gt;$services.localization.render('antivirus.log.actions.delete.confirm.button')&lt;/button&gt;
+        &lt;a href="#" class="btn btn-danger"&gt;$services.localization.render('antivirus.log.actions.delete.confirm.button')&lt;/a&gt;
       &lt;/div&gt;
     &lt;/div&gt;
   &lt;/div&gt;
@@ -238,7 +238,8 @@
     if (buttonLink.indexOf('?') == -1) {
       buttonLink = buttonLink + '?';
     }
-    buttonLink = buttonLink + "&amp;confirm=1&amp;form_token=${services.csrf.getToken()}";
+    // Append the confirmation and form token (added, for convenience, inside the modal) to the URL.
+    buttonLink = buttonLink + '&amp;confirm=1&amp;form_token=' + modal.data('csrf');
 
     // Update the modal.
     modalTitle.html(titleText)

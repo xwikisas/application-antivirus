@@ -42,9 +42,10 @@
   <content>{{include reference="Licenses.Code.VelocityMacros"/}}
 
 {{velocity}}
-#set ($configClassReference = $services.model.resolveDocument('ConfigurationClass', 'currentmixed'))
+#set ($configClassReference = $services.model.resolveDocument('Antivirus.ConfigurationClass', 'currentmixed'))
 #if ($services.licensing.licensor.hasLicensureForEntity($configClassReference))
-  #set ($configDoc = $xwiki.getDocument('Configuration'))
+  #set ($discard = $xwiki.ssx.use('Antivirus.Administration'))
+  #set ($configDoc = $xwiki.getDocument('Antivirus.Configuration'))
   #set ($configClass = $xwiki.getDocument($configClassReference).xWikiClass)
   #set ($configObject = $configDoc.getObject($configClass.name))
 
@@ -313,10 +314,7 @@
       <linkPrefix/>
     </property>
     <property>
-      <propertiesToShow>
-        <value>enabled</value>
-        <value>defaultAntivirusName</value>
-      </propertiesToShow>
+      <propertiesToShow/>
     </property>
     <property>
       <sectionOrder/>
