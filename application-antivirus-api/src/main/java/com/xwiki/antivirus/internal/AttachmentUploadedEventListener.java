@@ -50,6 +50,7 @@ import com.xpn.xwiki.doc.XWikiDocument;
 import com.xwiki.antivirus.AntivirusConfiguration;
 import com.xwiki.antivirus.AntivirusEngine;
 import com.xwiki.antivirus.AntivirusException;
+import com.xwiki.antivirus.AntivirusLog;
 import com.xwiki.antivirus.ScanResult;
 import com.xwiki.licensing.Licensor;
 
@@ -72,6 +73,9 @@ public class AttachmentUploadedEventListener extends AbstractEventListener
 
     @Inject
     private Licensor licensor;
+
+    @Inject
+    private AntivirusLog antivirusLog;
 
     @Inject
     private Logger logger;
@@ -157,6 +161,10 @@ public class AttachmentUploadedEventListener extends AbstractEventListener
                 logger.warn("Attachment [{}] found infected with [{}] during event [{}] by user [{}]",
                     attachment.getReference(), scanResult.getfoundViruses(), event.getClass().getName(),
                     context.getUserReference());
+
+                // Save the incident in the log.
+                antivirusLog.log(attachment, scanResult.getfoundViruses(), "blocked", "upload",
+                    antivirusConfiguration.getDefaultEngineName());
             } catch (AntivirusException e) {
                 logger.error("Failed to scan attachment [{}] during event [{}] by user [{}]", attachment.getReference(),
                     event.getClass().getName(), context.getUserReference(), e);

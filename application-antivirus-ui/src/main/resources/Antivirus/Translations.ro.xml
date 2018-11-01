@@ -44,5 +44,50 @@
 Antivirus.ConfigurationClass_enabled=Activat
 Antivirus.ConfigurationClass_enabled_hint=Dacă scanarea antivirus este activată, pentru oricare dintre operațiunile de atașare de fișiere, creare de paginii sau scanare periodica a întregului wiki.
 Antivirus.ConfigurationClass_defaultEngineName=Antivirus implicit
-Antivirus.ConfigurationClass_defaultEngineName_hint=Motorul antivirus utilizat în timpul scanării. Utilizați Managerul de Extensii pentru a căuta alte implementări pe care le puteți instala și utiliza.</content>
+Antivirus.ConfigurationClass_defaultEngineName_hint=Motorul antivirus utilizat în timpul scanării. Utilizați Managerul de Extensii pentru a căuta alte implementări pe care le puteți instala și utiliza.
+
+antivirus.extension.name=Aplicaţie antivirus
+
+antivirus.log.title=Jurnal de incidente antivirus
+antivirus.log.deletedMarker=(șters)
+
+antivirus.log.incident.title=Incident: {0}
+
+antivirus.log.index.attachmentName=Nume fișier
+antivirus.log.index.attachmentInfections=Infecții
+antivirus.log.index.incidentAction=Stare
+antivirus.log.index.incidentDate=Data detectării
+antivirus.log.index.incidentContext=Context
+antivirus.log.index.attachmentDocument=Pagina
+antivirus.log.index.attachmentDate=Data atașamentului
+antivirus.log.index.attachmentAuthor=Ataşat de
+antivirus.log.index._actions=Acțiuni
+antivirus.log.index._actions.delete=Șterge
+antivirus.log.index._actions.deleteall=Șterge tot
+
+Antivirus.AntivirusIncidentClass_incidentAction_blocked=Blocat
+Antivirus.AntivirusIncidentClass_incidentAction_deleted=Şters
+Antivirus.AntivirusIncidentClass_incidentAction_deleteFailed=Ștergere eșuată
+Antivirus.AntivirusIncidentClass_incidentContext_upload=Ataşare
+Antivirus.AntivirusIncidentClass_incidentContext_scheduledScan=Scanare programată
+
+antivirus.log.actions.notSupported=Acțiunea nu este acceptată.
+antivirus.log.actions.notSpecified=Nu a fost specificată nicio acțiune.
+
+antivirus.log.actions.deleteall=Ștergeți toate incidentele
+antivirus.log.actions.deleteall.success=Incidentele au fost șterse cu succes.
+antivirus.log.actions.deleteall.failure=Nu s-au putut șterge următoarele incidente ({0}):
+
+antivirus.log.actions.delete.confirm.title=Confirmare ștergere
+antivirus.log.actions.delete.confirm.question=Sunteți sigur că doriți să ștergeți acest incident?
+antivirus.log.actions.delete.confirm.button=Șterge
+
+antivirus.log.actions.deleteall.confirm.title=Confirmă ștergerea tuturor incidentelor
+antivirus.log.actions.deleteall.confirm.question=Sunteți sigur că doriți să ștergeți toate incidentele din jurnal?
+antivirus.log.actions.deleteall.confirm.button=Șterge tot
+antivirus.log.actions.confirmModal.cancelButton=Anulare
+
+antivirus.log.actions.status.delete.inProgress=Se șterge...
+antivirus.log.actions.status.delete.done=Şters
+antivirus.log.actions.status.delete.failed=Ştergere eşuată</content>
 </xwikidoc>

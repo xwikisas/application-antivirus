@@ -48,6 +48,7 @@ import com.xpn.xwiki.doc.XWikiDocument;
 import com.xwiki.antivirus.AntivirusConfiguration;
 import com.xwiki.antivirus.AntivirusEngine;
 import com.xwiki.antivirus.AntivirusException;
+import com.xwiki.antivirus.AntivirusLog;
 import com.xwiki.antivirus.ScanResult;
 import com.xwiki.licensing.Licensor;
 
@@ -104,6 +105,8 @@ public class AttachmentUploadedEventListenerTest
 
     private ScanResult scanResult;
 
+    private AntivirusLog antivirusLog;
+
     @Before
     public void setUp() throws Exception
     {
@@ -147,6 +150,8 @@ public class AttachmentUploadedEventListenerTest
 
         engine = mock(AntivirusEngine.class);
         scanResult = new ScanResult(attachmentReference, true, Collections.emptyList());
+
+        antivirusLog = mocker.getInstance(AntivirusLog.class);
     }
 
     @Test
@@ -349,7 +354,7 @@ public class AttachmentUploadedEventListenerTest
         verify(licensor, times(1))
             .hasLicensure(new DocumentReference(context.getMainXWiki(), "Antivirus", "ConfigurationClass"));
 
-        verify(configuration, times(1)).getDefaultEngineName();
+        verify(configuration, times(2)).getDefaultEngineName();
 
         // Make sure we only get to scan 2 times:
         // * once for the INSERT.
@@ -360,6 +365,10 @@ public class AttachmentUploadedEventListenerTest
         // Check the warning is logged.
         verify(logger, times(1)).warn("Attachment [{}] found infected with [{}] during event [{}] by user [{}]",
             attachmentReference, infectionResult.getfoundViruses(), event.getClass().getName(), userReference);
+
+        // Check the incident is logged in the antivirus log.
+        verify(antivirusLog, times(1)).log(attachment2, infectionResult.getfoundViruses(), "blocked", "upload",
+            roleHint);
 
         // Make sure no other scans are made (i.e. for the DELETE).
         verifyNoMoreInteractions(engine);
