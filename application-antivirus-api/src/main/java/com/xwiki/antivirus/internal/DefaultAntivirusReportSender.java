@@ -36,6 +36,7 @@ import javax.mail.internet.MimeMessage;
 
 import org.apache.commons.collections4.IteratorUtils;
 import org.xwiki.component.annotation.Component;
+import org.xwiki.component.manager.ComponentManager;
 import org.xwiki.mail.MailListener;
 import org.xwiki.mail.MailSender;
 import org.xwiki.mail.MimeMessageFactory;
@@ -69,10 +70,6 @@ public class DefaultAntivirusReportSender implements AntivirusReportSender
     private MimeMessageFactory<Iterator<MimeMessage>> usersAndGroupsMessageFactory;
 
     @Inject
-    @Named("database")
-    private MailListener mailListener;
-
-    @Inject
     private SessionFactory sessionFactory;
 
     @Inject
@@ -80,6 +77,9 @@ public class DefaultAntivirusReportSender implements AntivirusReportSender
 
     @Inject
     private Provider<XWikiContext> contextProvider;
+
+    @Inject
+    private ComponentManager componentManager;
 
     @Override
     public void sendReport(Map<XWikiAttachment, Collection<String>> deletedInfectedAttachments,
@@ -118,6 +118,8 @@ public class DefaultAntivirusReportSender implements AntivirusReportSender
 
         Iterator<MimeMessage> messages =
             usersAndGroupsMessageFactory.createMessage(session, usersOrGroups, usersAndGroupsFactoryParameters);
+
+        MailListener mailListener = this.componentManager.getInstance(MailListener.class, "database");
 
         mailSender.sendAsynchronously(IteratorUtils.toList(messages), session, mailListener);
     }
