@@ -31,7 +31,7 @@
   <packaging>xar</packaging>
   <properties>
     <!-- Name to display by the Extension Manager -->
-    <xwiki.extension.name>Antivirus Application</xwiki.extension.name>
+    <xwiki.extension.name>Antivirus Application (base)</xwiki.extension.name>
     <xwiki.extension.category>application</xwiki.extension.category>
     <!-- Configuration and other UI must be installed on the main wiki only. -->
     <xwiki.extension.namespaces>wiki:xwiki</xwiki.extension.namespaces>
