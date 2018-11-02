@@ -29,7 +29,7 @@
   <name>Antivirus - API</name>
   <description>API to programmatically scan an attachment for virus or malware infection.</description>
   <properties>
-    <xwiki.jacoco.instructionRatio>0.32</xwiki.jacoco.instructionRatio>
+    <xwiki.jacoco.instructionRatio>0.39</xwiki.jacoco.instructionRatio>
     <xwiki.pitest.mutationThreshold>0</xwiki.pitest.mutationThreshold>
     <!-- Name to display by the Extension Manager -->
     <xwiki.extension.name>Antivirus API</xwiki.extension.name>
