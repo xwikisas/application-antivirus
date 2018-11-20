@@ -39,4 +39,10 @@ public interface AntivirusConfiguration
      * @return the name of the {@link AntivirusEngine} to use when scanning
      */
     String getDefaultEngineName();
+
+    /**
+     * @return {@code true} if the report at the end of a Scheduled Scan should always be sent to the admins, even when
+     *         no infection has been detected
+     */
+    boolean shouldAlwaysSendReport();
 }

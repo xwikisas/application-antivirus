@@ -54,6 +54,20 @@
       <defaultWeb/>
       <nameField/>
       <validationScript/>
+      <alwaysSendReport>
+        <customDisplay/>
+        <defaultValue>1</defaultValue>
+        <disabled>0</disabled>
+        <displayFormType>select</displayFormType>
+        <displayType/>
+        <name>alwaysSendReport</name>
+        <number>3</number>
+        <prettyName>alwaysSendReport</prettyName>
+        <unmodifiable>0</unmodifiable>
+        <validationMessage/>
+        <validationRegExp/>
+        <classType>com.xpn.xwiki.objects.classes.BooleanClass</classType>
+      </alwaysSendReport>
       <defaultEngineName>
         <customDisplay/>
         <disabled>0</disabled>
@@ -69,7 +83,7 @@
       </defaultEngineName>
       <enabled>
         <customDisplay/>
-        <defaultValue/>
+        <defaultValue>1</defaultValue>
         <disabled>0</disabled>
         <displayFormType>select</displayFormType>
         <displayType/>
@@ -82,6 +96,9 @@
         <classType>com.xpn.xwiki.objects.classes.BooleanClass</classType>
       </enabled>
     </class>
+    <property>
+      <alwaysSendReport>1</alwaysSendReport>
+    </property>
     <property>
       <defaultEngineName>clamav</defaultEngineName>
     </property>

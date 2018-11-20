@@ -236,7 +236,12 @@ public class AntivirusJob extends AbstractJob
     private void maybeSendReport(Map<XWikiAttachment, Collection<String>> deletedInfectedAttachments,
         Map<XWikiAttachment, Collection<String>> deleteFailedInfectedAttachments)
     {
-        if (deletedInfectedAttachments.isEmpty() && deleteFailedInfectedAttachments.isEmpty()) {
+        AntivirusConfiguration antivirusConfiguration = Utils.getComponent(AntivirusConfiguration.class);
+
+        // Skip sending the report only when no infected attachments are found and report sending is not forced.
+        if (!antivirusConfiguration.shouldAlwaysSendReport() && deletedInfectedAttachments.isEmpty()
+            && deleteFailedInfectedAttachments.isEmpty()) {
+            LOGGER.debug("No-infections scheduled scan report sending is skipped. 'Alway Send Report' is disabled.");
             return;
         }
 

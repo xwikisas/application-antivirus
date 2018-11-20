@@ -45,6 +45,8 @@ Antivirus.ConfigurationClass_enabled=Activé
 Antivirus.ConfigurationClass_enabled_hint=Si l'analyse antivirus est activée, pour toutes les opérations de téléchargement de pièce jointe, de création de page ou d'analyse planifiée de tout le wiki.
 Antivirus.ConfigurationClass_defaultEngineName=Antivirus par défaut
 Antivirus.ConfigurationClass_defaultEngineName_hint=Le moteur antivirus à utiliser lors de l'analyse. Utilisez Extension Manager pour rechercher d'autres implémentations que vous pouvez installer et utiliser.
+Antivirus.ConfigurationClass_alwaysSendReport=Toujours envoyer le rapport
+Antivirus.ConfigurationClass_alwaysSendReport_hint=Si le rapport à la fin d'un scan programmé doit toujours être envoyé aux administrateurs, même si aucune infection n'a été détectée.
 
 antivirus.log.title=Journal des incidents antivirus
 antivirus.log.deletedMarker=(supprimé)

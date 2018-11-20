@@ -77,6 +77,16 @@
       #end
       &lt;/select&gt;
     &lt;/dd&gt;
+
+    &lt;dt&gt;
+      &lt;label for="Antivirus.ConfigurationClass_0_alwaysSendReport"&gt;$configClass.alwaysSendReport.translatedPrettyName&lt;/label&gt;
+      &lt;span class='xHint'&gt;$services.localization.render('Antivirus.ConfigurationClass_alwaysSendReport_hint')&lt;/span&gt;
+    &lt;/dt&gt;
+    &lt;dd&gt;{{/html}}
+
+    $configDoc.display('alwaysSendReport', 'edit')
+
+    {{html clean="false"}}&lt;/dd&gt;
   &lt;/dl&gt;
   &lt;div class='buttonwrapper'&gt;
     &lt;input value="$services.localization.render('admin.save')" class='button' type='submit'&gt;

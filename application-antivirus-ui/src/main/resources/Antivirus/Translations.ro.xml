@@ -45,6 +45,8 @@ Antivirus.ConfigurationClass_enabled=Activat
 Antivirus.ConfigurationClass_enabled_hint=Dacă scanarea antivirus este activată, pentru oricare dintre operațiunile de atașare de fișiere, creare de paginii sau scanare periodica a întregului wiki.
 Antivirus.ConfigurationClass_defaultEngineName=Antivirus implicit
 Antivirus.ConfigurationClass_defaultEngineName_hint=Motorul antivirus utilizat în timpul scanării. Utilizați Managerul de Extensii pentru a căuta alte implementări pe care le puteți instala și utiliza.
+Antivirus.ConfigurationClass_alwaysSendReport=Trimiteți întotdeauna un raport
+Antivirus.ConfigurationClass_alwaysSendReport_hint=Dacă raportul de la sfârșitul unei scanări programate ar trebui să fie întotdeauna trimis administratorilor, chiar și atunci când nu a fost detectată nicio infecție.
 
 antivirus.log.title=Jurnal de incidente antivirus
 antivirus.log.deletedMarker=(șters)
