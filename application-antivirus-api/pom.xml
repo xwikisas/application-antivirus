@@ -31,6 +31,8 @@
   <properties>
     <xwiki.jacoco.instructionRatio>0.00</xwiki.jacoco.instructionRatio>
     <xwiki.pitest.mutationThreshold>0</xwiki.pitest.mutationThreshold>
+    <!-- Skipping clirr FTM, to simplify things. -->
+    <xwiki.clirr.skip>true</xwiki.clirr.skip>
     <!-- Name to display by the Extension Manager -->
     <xwiki.extension.name>Antivirus API</xwiki.extension.name>
     <!-- Restrict the extension to be installed at the Farm level only. Must be available in all wikis. -->
