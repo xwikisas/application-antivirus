@@ -45,6 +45,8 @@ Antivirus.ConfigurationClass_enabled=Enabled
 Antivirus.ConfigurationClass_enabled_hint=If antivirus scanning is enabled, for any of the attachment uploading, page creation or scheduled full-wiki scan operations.
 Antivirus.ConfigurationClass_defaultEngineName=Default Antivirus
 Antivirus.ConfigurationClass_defaultEngineName_hint=The antivirus engine to use during scanning. Use the Extension Manager to search for other implementations that you can install and use.
+Antivirus.ConfigurationClass_alwaysSendReport=Always Send Report
+Antivirus.ConfigurationClass_alwaysSendReport_hint=If the report at the end of a Scheduled Scan should always be sent to the admins, even when no infection has been detected.
 
 antivirus.extension.name=Antivirus Application
 

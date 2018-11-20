@@ -52,4 +52,10 @@ public class DefaultAntivirusConfiguration implements AntivirusConfiguration
     {
         return configuration.getProperty("defaultEngineName", "clamav");
     }
+
+    @Override
+    public boolean shouldAlwaysSendReport()
+    {
+        return configuration.getProperty("alwaysSendReport", 1) == 1;
+    }
 }
