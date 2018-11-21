@@ -38,8 +38,10 @@ public interface AntivirusReportSender
      * @param deletedInfectedAttachments map of [attachment,list of infections] for each deleted infected attachment
      * @param deleteFailedInfectedAttachments map of [attachment,list of infections] for each infected attachment for
      *            which deletion failed
+     * @param scanFailedAttachments map of [attachment,exception] for each attachment that failed to be scanned
      * @throws Exception in case of problems
      */
     void sendReport(Map<XWikiAttachment, Collection<String>> deletedInfectedAttachments,
-        Map<XWikiAttachment, Collection<String>> deleteFailedInfectedAttachments) throws Exception;
+        Map<XWikiAttachment, Collection<String>> deleteFailedInfectedAttachments,
+        Map<XWikiAttachment, Exception> scanFailedAttachments) throws Exception;
 }
