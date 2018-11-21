@@ -94,14 +94,20 @@
       </text>
     </class>
     <property>
-      <html>#macro (printAttachments $attachmentsMap)
+      <html>#macro (printAttachments $attachmentsMap $valuesType)
   &lt;table&gt;
   &lt;tr&gt;
     &lt;th style="text-align: left"&gt;Filename&lt;/th&gt;
     &lt;th style="text-align: left"&gt;Document&lt;/th&gt;
     &lt;th style="text-align: left"&gt;Uploaded by&lt;/th&gt;
     &lt;th style="text-align: left"&gt;Upload Date&lt;/th&gt;
-    &lt;th style="text-align: left"&gt;Infection Type&lt;/th&gt;
+    &lt;th style="text-align: left"&gt;
+    #if ($valuesType == 'infections')
+      Infection Type
+    #elseif ($valuesType == 'errors')
+      Root Error
+    #end
+    &lt;/th&gt;
   &lt;/tr&gt;
   #foreach ($attachmentsMapEntry in $attachmentsMap.entrySet())
     #set ($attachment = $attachmentsMapEntry.key)
@@ -111,7 +117,13 @@
       #set ($authorReference = $attachment.attachment.authorReference)
       &lt;td style="text-align: left"&gt;&lt;a href="$xwiki.xWiki.getExternalURL($authorReference, 'view', $xcontext.context)"&gt;$escapetool.xml($xwiki.getPlainUserName($authorReference))&lt;/a&gt;&lt;/td&gt;
       &lt;td style="text-align: left"&gt;$xwiki.formatDate($attachment.date)&lt;/td&gt;
-      &lt;td style="text-align: left"&gt;$escapetool.xml($attachmentsMapEntry.value)&lt;/td&gt;
+      &lt;td style="text-align: left"&gt;
+        #if ($valuesType == 'infections')
+          $escapetool.xml($attachmentsMapEntry.value)
+        #elseif ($valuesType == 'errors')
+          $escapetool.xml($exceptiontool.getRootCauseMessage($attachmentsMapEntry.value))
+        #end
+      &lt;/td&gt;
     &lt;/tr&gt;
   #end
   &lt;/table&gt;
@@ -119,23 +131,39 @@
 
 &lt;p&gt;Hello, admin of the wiki $wikiUrl.&lt;/p&gt;
 
+&lt;p&gt;Below you will find the report for a scheduled antivirus scan that was just executed on your wiki:&lt;/p&gt;
+
+#set ($nrOfInfections = $deletedInfectedAttachments.size() + $deleteFailedInfectedAttachments.size())
+&lt;h3&gt;Infections ($nrOfInfections):&lt;/h3&gt;
+
 #if ($deletedInfectedAttachments.size() == 0 &amp;&amp; $deleteFailedInfectedAttachments.size() == 0)
-  &lt;p&gt;A scheduled antivirus scan has executed on your wiki and no infections have been detected.&lt;/p&gt;
+  &lt;p&gt;No infections have been detected.&lt;/p&gt;
 #else
-  &lt;p&gt;This is an email informing you that attachment files in documents of your wiki have been detected as being infected with viruses or malware.&lt;/p&gt;
+  &lt;p&gt;Attachment files in documents of your wiki have been detected as being infected with viruses or malware.&lt;/p&gt;
 
   &lt;p&gt;In order to remove the threat, the infected files have been automatically &lt;b&gt;DELETED&lt;/b&gt;.&lt;/p&gt;
 
   #if ($deleteFailedInfectedAttachments.size() &gt; 0)
     &lt;p&gt;List of attachments that &lt;b&gt;FAILED&lt;/b&gt; to be deleted:&lt;/p&gt;
-    #printAttachments($deleteFailedInfectedAttachments)
+    #printAttachments($deleteFailedInfectedAttachments, 'infections')
     &lt;div&gt;Please check the server logs for more information on the reason why the delete operation failed.&lt;/div&gt;
   #end
 
   #if ($deletedInfectedAttachments.size() &gt; 0)
     &lt;p&gt;List of attachments that were successfully deleted:&lt;/p&gt;
-    #printAttachments($deletedInfectedAttachments)
+    #printAttachments($deletedInfectedAttachments, 'infections')
   #end
+#end
+
+&lt;h3&gt;Errors ($scanFailedAttachments.size()):&lt;/h3&gt;
+
+#if ($scanFailedAttachments.size() == 0)
+  &lt;p&gt;No scan errors have occurred.&lt;/p&gt;
+#else
+  &lt;p&gt;The following errors have occurred while scanning attachment files:&lt;/p&gt;
+  #printAttachments($scanFailedAttachments, 'errors')
+  &lt;div&gt;Please check the server logs for more information on the reason why these errors occurred.&lt;/div&gt;
+  &lt;p&gt;&lt;b&gt;Until a scheduled scan executes without any errors, your wikis's infection level cannot be established.&lt;/b&gt;&lt;/p&gt;
 #end
 
 &lt;p&gt;Please see the &lt;a href="$adminUrl"&gt;Antivirus Administration section&lt;/a&gt; in your wiki for more options.&lt;/p&gt;
@@ -152,43 +180,7 @@ The XWiki Antivirus Application
       <subject>#if ($deletedInfectedAttachments.size() &gt; 0 || $deleteFailedInfectedAttachments.size() &gt; 0)[VIRUS DETECTED] #{end}XWiki scheduled antivirus scan report</subject>
     </property>
     <property>
-      <text>#macro(printAttachments $attachmentsMap)
-#foreach ($attachmentsMapEntry in $attachmentsMap.entrySet())
-  #set ($attachment = $attachmentsMapEntry.key)
-  #set ($authorReference = $attachment.attachment.authorReference)
-  * $attachment.filename from document $attachment.document.plainTitle ($attachment.document.externalURL) uploaded by $xwiki.getPlainUserName($authorReference) ($xwiki.xWiki.getExternalURL($authorReference, 'view', $xcontext.context)) on $xwiki.formatDate($attachment.date) infected with $attachmentsMapEntry.value
-#end
-#end
-Hello, admin of the wiki $wikiUrl.
-
-#if ($deletedInfectedAttachments.size() == 0 &amp;&amp; $deleteFailedInfectedAttachments.size() == 0)
-A scheduled antivirus scan has executed on your wiki and no infections have been detected.
-
-#else
-Attachment files in documents of your wiki have been detected as being infected with viruses or malware.
-
-In order to remove the threat, the infected files have been automatically DELETED.
-
-#if ($deleteFailedInfectedAttachments.size() &gt; 0)
-List of attachments that FAILED to be deleted:
-
-#printAttachments($deleteFailedInfectedAttachments)
-
-Please check the server logs for more information on the reason why the delete operation failed.
-
-#end
-#if ($deletedInfectedAttachments.size() &gt; 0)
-List of attachments that were successfully deleted:
-
-#printAttachments($deletedInfectedAttachments)
-
-#end
-#end
-Please see the Antivirus Administration section in your wiki for more options:
-$adminUrl
-
-Thanks,
-The XWiki Antivirus Application</text>
+      <text/>
     </property>
   </object>
   <object>
@@ -245,14 +237,20 @@ The XWiki Antivirus Application</text>
       </text>
     </class>
     <property>
-      <html>#macro (printAttachments $attachmentsMap)
+      <html>#macro (printAttachments $attachmentsMap $valuesType)
   &lt;table&gt;
   &lt;tr&gt;
     &lt;th style="text-align: left"&gt;Nom du fichier&lt;/th&gt;
     &lt;th style="text-align: left"&gt;Document&lt;/th&gt;
     &lt;th style="text-align: left"&gt;Téléchargé par&lt;/th&gt;
     &lt;th style="text-align: left"&gt;Date de téléchargement&lt;/th&gt;
-    &lt;th style="text-align: left"&gt;Type d'infection&lt;/th&gt;
+    &lt;th style="text-align: left"&gt;
+    #if ($valuesType == 'infections')
+      Type d'infection
+    #elseif ($valuesType == 'errors')
+      Erreur principale
+    #end
+    &lt;/th&gt;
   &lt;/tr&gt;
   #foreach ($attachmentsMapEntry in $attachmentsMap.entrySet())
     #set ($attachment = $attachmentsMapEntry.key)
@@ -262,7 +260,13 @@ The XWiki Antivirus Application</text>
       #set ($authorReference = $attachment.attachment.authorReference)
       &lt;td style="text-align: left"&gt;&lt;a href="$xwiki.xWiki.getExternalURL($authorReference, 'view', $xcontext.context)"&gt;$escapetool.xml($xwiki.getPlainUserName($authorReference))&lt;/a&gt;&lt;/td&gt;
       &lt;td style="text-align: left"&gt;$xwiki.formatDate($attachment.date)&lt;/td&gt;
-      &lt;td style="text-align: left"&gt;$escapetool.xml($attachmentsMapEntry.value)&lt;/td&gt;
+      &lt;td style="text-align: left"&gt;
+        #if ($valuesType == 'infections')
+          $escapetool.xml($attachmentsMapEntry.value)
+        #elseif ($valuesType == 'errors')
+          $escapetool.xml($exceptiontool.getRootCauseMessage($attachmentsMapEntry.value))
+        #end
+      &lt;/td&gt;
     &lt;/tr&gt;
   #end
   &lt;/table&gt;
@@ -270,23 +274,39 @@ The XWiki Antivirus Application</text>
 
 &lt;p&gt;Bonjour, administrateur du wiki $wikiUrl.&lt;/p&gt;
 
+&lt;p&gt;Vous trouverez ci-dessous un rapport d'analyse antivirus planifié qui vient d'être exécuté sur votre wiki:&lt;/p&gt;
+
+#set ($nrOfInfections = $deletedInfectedAttachments.size() + $deleteFailedInfectedAttachments.size())
+&lt;h3&gt;Infections ($nrOfInfections):&lt;/h3&gt;
+
 #if ($deletedInfectedAttachments.size() == 0 &amp;&amp; $deleteFailedInfectedAttachments.size() == 0)
-  &lt;p&gt;Une analyse antivirus programmée a été exécutée sur votre wiki et aucune infection n'a été détectée.&lt;/p&gt;
+  &lt;p&gt;Aucune infection n'a été détectée.&lt;/p&gt;
 #else
-  &lt;p&gt;Ceci est une notification vous informant que des pièces jointes dans des documents de votre wiki ont été détectées comme étant infectées par des virus ou des logiciels malveillants.&lt;/p&gt;
+  &lt;p&gt;Des pièces jointes dans des documents de votre wiki ont été détectées comme étant infectées par des virus ou des logiciels malveillants.&lt;/p&gt;
 
   &lt;p&gt;Afin de supprimer la menace, les fichiers infectés ont été automatiquement &lt;b&gt;SUPPRIMÉS&lt;/b&gt;.&lt;/p&gt;
 
   #if ($deleteFailedInfectedAttachments.size() &gt; 0)
     &lt;p&gt;Liste des pièces jointes qui ont &lt;b&gt;ÉCHOUÉ&lt;/b&gt; à supprimer:&lt;/p&gt;
-    #printAttachments($deleteFailedInfectedAttachments)
+    #printAttachments($deleteFailedInfectedAttachments, 'infections')
     &lt;div&gt;Consultez les journaux du serveur pour plus d'informations sur la raison de l'échec de l'opération de suppression.&lt;/div&gt;
   #end
 
   #if ($deletedInfectedAttachments.size() &gt; 0)
     &lt;p&gt;Liste des pièces jointes supprimées avec succès:&lt;/p&gt;
-    #printAttachments($deletedInfectedAttachments)
+    #printAttachments($deletedInfectedAttachments, 'infections')
   #end
+#end
+
+&lt;h3&gt;Erreurs ($scanFailedAttachments.size()):&lt;/h3&gt;
+
+#if ($scanFailedAttachments.size() == 0)
+  &lt;p&gt;Aucune erreur d'analyse ne s'est produite.&lt;/p&gt;
+#else
+  &lt;p&gt;Les erreurs suivantes se sont produites lors de l'analyse des pièces jointes:&lt;/p&gt;
+  #printAttachments($scanFailedAttachments, 'errors')
+  &lt;div&gt;Consultez les journaux du serveur pour plus d’informations sur la raison de ces erreurs.&lt;/div&gt;
+  &lt;p&gt;&lt;b&gt;Jusqu'à ce qu'une analyse planifiée soit exécutée sans erreur, le niveau d'infection de vos wikis ne peut pas être établi.&lt;/b&gt;&lt;/p&gt;
 #end
 
 &lt;p&gt;Veuillez consulter &lt;a href="$adminUrl"&gt;la section d'administration Antivirus&lt;/a&gt; de votre wiki pour plus d'options.&lt;/p&gt;
@@ -303,43 +323,7 @@ L'application d'Antivirus pour XWiki
       <subject>#if ($deletedInfectedAttachments.size() &gt; 0 || $deleteFailedInfectedAttachments.size() &gt; 0)[VIRUS DÉTECTÉ] #{end}Rapport d'analyse antivirus planifié XWiki</subject>
     </property>
     <property>
-      <text>#macro(printAttachments $attachmentsMap)
-#foreach ($attachmentsMapEntry in $attachmentsMap.entrySet())
-  #set ($attachment = $attachmentsMapEntry.key)
-  #set ($authorReference = $attachment.attachment.authorReference)
-  * $attachment.filename du document $attachment.document.plainTitle ($attachment.document.externalURL) chargé par $xwiki.getPlainUserName($authorReference) ($xwiki.xWiki.getExternalURL($authorReference, 'view', $xcontext.context)) à $xwiki.formatDate($attachment.date) infecté par $attachmentsMapEntry.value
-#end
-#end
-Bonjour, administrateur du wiki $wikiUrl.
-
-#if ($deletedInfectedAttachments.size() == 0 &amp;&amp; $deleteFailedInfectedAttachments.size() == 0)
-Une analyse antivirus programmée a été exécutée sur votre wiki et aucune infection n'a été détectée.
-
-#else
-Ceci est une notification vous informant que des pièces jointes dans des documents de votre wiki ont été détectées comme étant infectées par des virus ou des logiciels malveillants.
-
-Afin de supprimer la menace, les fichiers infectés ont été automatiquement SUPPRIMÉS.
-
-#if ($deleteFailedInfectedAttachments.size() &gt; 0)
-Liste des pièces jointes qui ont ÉCHOUÉ à supprimer:
-
-#printAttachments($deleteFailedInfectedAttachments)
-
-Consultez les journaux du serveur pour plus d'informations sur la raison de l'échec de l'opération de suppression.
-
-#end
-#if ($deletedInfectedAttachments.size() &gt; 0)
-Liste des pièces jointes supprimées avec succès:
-
-#printAttachments($deletedInfectedAttachments)
-
-#end
-#end
-Veuillez consulter la section d'administration Antivirus de votre wiki pour plus d'options:
-$adminUrl
-
-Cordialement,
-L'application d'Antivirus pour XWiki</text>
+      <text/>
     </property>
   </object>
   <object>
@@ -396,14 +380,20 @@ L'application d'Antivirus pour XWiki</text>
       </text>
     </class>
     <property>
-      <html>#macro (printAttachments $attachmentsMap)
+      <html>#macro (printAttachments $attachmentsMap $valuesType)
   &lt;table&gt;
   &lt;tr&gt;
     &lt;th style="text-align: left"&gt;Nume fişier&lt;/th&gt;
     &lt;th style="text-align: left"&gt;Document&lt;/th&gt;
     &lt;th style="text-align: left"&gt;Ataşat de&lt;/th&gt;
     &lt;th style="text-align: left"&gt;Data ataşării&lt;/th&gt;
-    &lt;th style="text-align: left"&gt;Tipul infecţiei&lt;/th&gt;
+    &lt;th style="text-align: left"&gt;
+    #if ($valuesType == 'infections')
+      Tipul infecţiei
+    #elseif ($valuesType == 'errors')
+      Eroarea principală
+    #end
+    &lt;/th&gt;
   &lt;/tr&gt;
   #foreach ($attachmentsMapEntry in $attachmentsMap.entrySet())
     #set ($attachment = $attachmentsMapEntry.key)
@@ -413,7 +403,13 @@ L'application d'Antivirus pour XWiki</text>
       #set ($authorReference = $attachment.attachment.authorReference)
       &lt;td style="text-align: left"&gt;&lt;a href="$xwiki.xWiki.getExternalURL($authorReference, 'view', $xcontext.context)"&gt;$escapetool.xml($xwiki.getPlainUserName($authorReference))&lt;/a&gt;&lt;/td&gt;
       &lt;td style="text-align: left"&gt;$xwiki.formatDate($attachment.date)&lt;/td&gt;
-      &lt;td style="text-align: left"&gt;$escapetool.xml($attachmentsMapEntry.value)&lt;/td&gt;
+      &lt;td style="text-align: left"&gt;
+        #if ($valuesType == 'infections')
+          $escapetool.xml($attachmentsMapEntry.value)
+        #elseif ($valuesType == 'errors')
+          $escapetool.xml($exceptiontool.getRootCauseMessage($attachmentsMapEntry.value))
+        #end
+      &lt;/td&gt;
     &lt;/tr&gt;
   #end
   &lt;/table&gt;
@@ -421,23 +417,39 @@ L'application d'Antivirus pour XWiki</text>
 
 &lt;p&gt;Bună, administrator al wiki-ului $wikiUrl.&lt;/p&gt;
 
+&lt;p&gt;Mai jos veți găsi raportul pentru o scanare antivirus periodică ce tocmai a fost executată pe wiki-ul dumneavoastră:&lt;/p&gt;
+
+#set ($nrOfErrors = $deletedInfectedAttachments.size() + $deleteFailedInfectedAttachments.size())
+&lt;h3&gt;Infecţii ($nrOfErrors):&lt;/h3&gt;
+
 #if ($deletedInfectedAttachments.size() == 0 &amp;&amp; $deleteFailedInfectedAttachments.size() == 0)
-  &lt;p&gt;O scanare antivirus programată a fost executată pe wiki-ul dumneavoastră și nu au fost detectate infecții.&lt;/p&gt;
+  &lt;p&gt;Nu au fost detectate infecții.&lt;/p&gt;
 #else
-  &lt;p&gt;Acest mesaj vă informează în legatură cu faptul că fişiere ataşate la documente din wiki-ul dumneavoastră au fost detectate drept infectate cu virusuri sau programe malware.&lt;/p&gt;
+  &lt;p&gt;Fişiere ataşate la documente din wiki-ul dumneavoastră au fost detectate ca fiind infectate cu virusuri sau programe malware.&lt;/p&gt;
 
   &lt;p&gt;Pentru a îndepărta pericolul, fişierele infectate au fost în mod automat &lt;b&gt;ŞTERSE&lt;/b&gt;.&lt;/p&gt;
 
   #if ($deleteFailedInfectedAttachments.size() &gt; 0)
     &lt;p&gt;Lista de ataşamente pentru care ştergerea a &lt;b&gt;EŞUAT&lt;/b&gt;:&lt;/p&gt;
-    #printAttachments($deleteFailedInfectedAttachments)
+    #printAttachments($deleteFailedInfectedAttachments, 'infections')
     &lt;div&gt;Verificaţi jurnalele server-ului pentru mai multe informaţii despre motivul pentru care operaţiuna de ştergere a eşuat.&lt;/div&gt;
   #end
 
   #if ($deletedInfectedAttachments.size() &gt; 0)
     &lt;p&gt;Lista de ataşamente care au fost şterse cu succes:&lt;/p&gt;
-    #printAttachments($deletedInfectedAttachments)
+    #printAttachments($deletedInfectedAttachments, 'infections')
   #end
+#end
+
+&lt;h3&gt;Erori ($scanFailedAttachments.size()):&lt;/h3&gt;
+
+#if ($scanFailedAttachments.size() == 0)
+  &lt;p&gt;Nu au apărut erori de scanare.&lt;/p&gt;
+#else
+  &lt;p&gt;Următoarele erori au apărut în timpul scanării fișierelor atașate:&lt;/p&gt;
+  #printAttachments($scanFailedAttachments, 'errors')
+  &lt;div&gt;Verificați jurnalele serverului pentru mai multe informații despre motivul producerii acestor erori.&lt;/div&gt;
+  &lt;p&gt;&lt;b&gt;Până când o scanare programată nu va fi executată fără erori, nivelul infecției wiki-ului nu poate fi stabilit.&lt;/b&gt;&lt;/p&gt;
 #end
 
 &lt;p&gt;Pentru mai multe opţiuni, consultaţi &lt;a href="$adminUrl"&gt;secţiunea de administrare Antivirus&lt;/a&gt; din wiki-ul dumneavoastră.&lt;/p&gt;
@@ -451,46 +463,10 @@ Aplicaţia de Antivirus pentru XWiki
       <language>ro</language>
     </property>
     <property>
-      <subject>#if ($deletedInfectedAttachments.size() &gt; 0 || $deleteFailedInfectedAttachments.size() &gt; 0)[VIRUS DETECTAT] #{end}Raport scanare periodică antivirus XWiki</subject>
+      <subject>#if ($deletedInfectedAttachments.size() &gt; 0 || $deleteFailedInfectedAttachments.size() &gt; 0)[VIRUS DETECTAT] #{end}Raport de scanare periodică antivirus XWiki</subject>
     </property>
     <property>
-      <text>#macro(printAttachments $attachmentsMap)
-#foreach ($attachmentsMapEntry in $attachmentsMap.entrySet())
-  #set ($attachment = $attachmentsMapEntry.key)
-  #set ($authorReference = $attachment.attachment.authorReference)
-  * $attachment.filename din documentul $attachment.document.plainTitle ($attachment.document.externalURL) ataşat de $xwiki.getPlainUserName($authorReference) ($xwiki.xWiki.getExternalURL($authorReference, 'view', $xcontext.context)) pe $xwiki.formatDate($attachment.date) infectat cu $attachmentsMapEntry.value
-#end
-#end
-Bună, administrator al wiki-ului $wikiUrl.
-
-#if ($deletedInfectedAttachments.size() == 0 &amp;&amp; $deleteFailedInfectedAttachments.size() == 0)
-O scanare antivirus programată a fost executată pe wiki-ul dumneavoastră și nu au fost detectate infecții.
-
-#else
-Acest mesaj vă informează în legatură cu faptul că fişiere ataşate la documente din wiki-ul dumneavoastră au fost detectate drept infectate cu virusuri sau programe malware.
-
-Pentru a îndepărta pericolul, fişierele infectate au fost în mod automat ŞTERSE.
-
-#if ($deleteFailedInfectedAttachments.size() &gt; 0)
-Lista de ataşamente pentru care ştergerea a EŞUAT:
-
-#printAttachments($deleteFailedInfectedAttachments)
-
-Verificaţi jurnalele server-ului pentru mai multe informaţii despre motivul pentru care operaţiuna de ştergere a eşuat.
-
-#end
-#if ($deletedInfectedAttachments.size() &gt; 0)
-Lista de ataşamente care au fost şterse cu succes:
-
-#printAttachments($deletedInfectedAttachments)
-
-#end
-#end
-Pentru mai multe opţiuni, consultaţi secţiunea de administrare Antivirus din wiki-ul dumneavoastră:
-$adminUrl
-
-Vă mulţumim,
-Aplicaţia de Antivirus pentru XWiki</text>
+      <text/>
     </property>
   </object>
 </xwikidoc>

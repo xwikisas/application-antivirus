@@ -83,7 +83,8 @@ public class DefaultAntivirusReportSender implements AntivirusReportSender
 
     @Override
     public void sendReport(Map<XWikiAttachment, Collection<String>> deletedInfectedAttachments,
-        Map<XWikiAttachment, Collection<String>> deleteFailedInfectedAttachments) throws Exception
+        Map<XWikiAttachment, Collection<String>> deleteFailedInfectedAttachments,
+        Map<XWikiAttachment, Exception> scanFailedAttachments) throws Exception
     {
         XWikiContext context = contextProvider.get();
         XWiki xwiki = context.getWiki();
@@ -93,10 +94,12 @@ public class DefaultAntivirusReportSender implements AntivirusReportSender
             convertToApiAttachments(deletedInfectedAttachments, context);
         Map<Attachment, Collection<String>> apiDeleteFailedInfectedAttachments =
             convertToApiAttachments(deleteFailedInfectedAttachments, context);
+        Map<Attachment, Exception> apiScanFailedAttachments = convertToApiAttachments(scanFailedAttachments, context);
 
         Map<String, Object> velocityVariables = new HashMap<>();
         velocityVariables.put("deletedInfectedAttachments", apiDeletedInfectedAttachments);
         velocityVariables.put("deleteFailedInfectedAttachments", apiDeleteFailedInfectedAttachments);
+        velocityVariables.put("scanFailedAttachments", apiScanFailedAttachments);
         velocityVariables.put("wikiUrl", xwiki.getExternalURL("Main.WebHome", "view", context));
         velocityVariables.put("adminUrl",
             xwiki.getExternalURL("XWiki.XWikiPreferences", "admin", "editor=globaladmin&section=antivirus", context));
@@ -124,11 +127,11 @@ public class DefaultAntivirusReportSender implements AntivirusReportSender
         mailSender.sendAsynchronously(IteratorUtils.toList(messages), session, mailListener);
     }
 
-    private Map<Attachment, Collection<String>> convertToApiAttachments(
-        Map<XWikiAttachment, Collection<String>> deletedInfectedAttachments, XWikiContext context)
+    private <T> Map<Attachment, T> convertToApiAttachments(Map<XWikiAttachment, T> deletedInfectedAttachments,
+        XWikiContext context)
     {
-        Map<Attachment, Collection<String>> result = new HashMap<>();
-        for (Map.Entry<XWikiAttachment, Collection<String>> entry : deletedInfectedAttachments.entrySet()) {
+        Map<Attachment, T> result = new HashMap<>();
+        for (Map.Entry<XWikiAttachment, T> entry : deletedInfectedAttachments.entrySet()) {
             result.put(new Attachment(new Document(entry.getKey().getDoc(), context), entry.getKey(), context),
                 entry.getValue());
         }
