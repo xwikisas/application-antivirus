@@ -23,7 +23,7 @@
   <parent>
     <groupId>com.xwiki.antivirus</groupId>
     <artifactId>application-antivirus-clamav</artifactId>
-    <version>1.2-xwiki-6.4.8</version>
+    <version>1.3-xwiki-6.4.8-SNAPSHOT</version>
   </parent>
   <artifactId>application-antivirus-clamav-ui</artifactId>
   <description>Protects attachments uploaded to XWiki pages by scanning them for viruses and malware infections.</description>
