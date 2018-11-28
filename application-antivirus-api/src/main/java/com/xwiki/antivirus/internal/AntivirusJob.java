@@ -26,7 +26,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.quartz.JobDataMap;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import org.slf4j.Logger;
@@ -43,7 +42,6 @@ import com.xpn.xwiki.XWiki;
 import com.xpn.xwiki.XWikiContext;
 import com.xpn.xwiki.doc.XWikiAttachment;
 import com.xpn.xwiki.doc.XWikiDocument;
-import com.xpn.xwiki.plugin.scheduler.AbstractJob;
 import com.xpn.xwiki.web.Utils;
 import com.xwiki.antivirus.AntivirusConfiguration;
 import com.xwiki.antivirus.AntivirusEngine;
@@ -64,9 +62,6 @@ public class AntivirusJob extends AbstractJob
     @Override
     protected void executeJob(JobExecutionContext jobContext) throws JobExecutionException
     {
-        JobDataMap data = jobContext.getJobDetail().getJobDataMap();
-        XWikiContext context = (XWikiContext) data.get("context");
-
         AntivirusConfiguration antivirusConfiguration = Utils.getComponent(AntivirusConfiguration.class);
         if (!antivirusConfiguration.isEnabled()) {
             if (LOGGER.isDebugEnabled()) {
@@ -105,7 +100,7 @@ public class AntivirusJob extends AbstractJob
 
         for (String wikiId : wikiIds) {
             scanWiki(wikiId, antivirus, deletedInfectedAttachments, deleteFailedInfectedAttachments,
-                scanFailedAttachments, context);
+                scanFailedAttachments);
         }
 
         // Send the report by email, if needed.
@@ -124,7 +119,7 @@ public class AntivirusJob extends AbstractJob
     private void scanWiki(String wikiId, AntivirusEngine antivirus,
         Map<XWikiAttachment, Collection<String>> deletedInfectedAttachments,
         Map<XWikiAttachment, Collection<String>> deleteFailedInfectedAttachments,
-        Map<XWikiAttachment, Exception> scanFailedAttachments, XWikiContext context)
+        Map<XWikiAttachment, Exception> scanFailedAttachments)
     {
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug("Scanning wiki [{}]...", wikiId);
@@ -150,15 +145,16 @@ public class AntivirusJob extends AbstractJob
         for (String docFullName : docsWithAttachments) {
             DocumentReference documentReference = resolver.resolve(docFullName, wikiReference);
             scanDocument(documentReference, antivirus, deletedInfectedAttachments, deleteFailedInfectedAttachments,
-                scanFailedAttachments, context);
+                scanFailedAttachments);
         }
     }
 
     private void scanDocument(DocumentReference documentReference, AntivirusEngine antivirus,
         Map<XWikiAttachment, Collection<String>> deletedInfectedAttachments,
         Map<XWikiAttachment, Collection<String>> deleteFailedInfectedAttachments,
-        Map<XWikiAttachment, Exception> scanFailedAttachments, XWikiContext context)
+        Map<XWikiAttachment, Exception> scanFailedAttachments)
     {
+        XWikiContext context = getXWikiContext();
         XWiki xwiki = context.getWiki();
 
         if (LOGGER.isDebugEnabled()) {
@@ -264,10 +260,9 @@ public class AntivirusJob extends AbstractJob
             Map<AttachmentReference, Collection<String>> failed =
                 getLoggingFriendlyMap(deleteFailedInfectedAttachments);
             Map<AttachmentReference, Collection<String>> deleted = getLoggingFriendlyMap(deletedInfectedAttachments);
-            LOGGER.error(
-                "Failed to send the infection report. Logging the report instead...\n"
-                    + "Delete failed for infected attachments: [{}]\n" + "Deleted infected attachments: [{}]",
-                failed, deleted, e);
+            LOGGER.error("Failed to send the infection report. Logging the report instead...\n"
+                + "Delete failed for infected attachments: [{}]\n" + "Deleted infected attachments: [{}]\n"
+                + "Scan failed attachments: [{}]", failed, deleted, scanFailedAttachments);
         }
     }
 
