@@ -135,7 +135,7 @@ public class DefaultAntivirusReportSender implements AntivirusReportSender, Init
 
         MailListener mailListener = this.componentManager.getInstance(MailListener.class, "database");
 
-        mailSender.sendAsynchronously(IteratorUtils.toList(messages), session, mailListener);
+        mailSender.sendAsynchronously(IteratorUtils.asIterable(messages), session, mailListener);
     }
 
     private <T> Map<Attachment, T> convertToApiAttachments(Map<XWikiAttachment, T> deletedInfectedAttachments,
