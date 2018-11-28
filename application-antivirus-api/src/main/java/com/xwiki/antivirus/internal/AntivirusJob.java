@@ -272,10 +272,9 @@ public class AntivirusJob extends AbstractJob
             Map<AttachmentReference, Collection<String>> failed =
                 getLoggingFriendlyMap(deleteFailedInfectedAttachments);
             Map<AttachmentReference, Collection<String>> deleted = getLoggingFriendlyMap(deletedInfectedAttachments);
-            LOGGER.error(
-                "Failed to send the infection report. Logging the report instead...\n"
-                    + "Delete failed for infected attachments: [{}]\n" + "Deleted infected attachments: [{}]",
-                failed, deleted, e);
+            LOGGER.error("Failed to send the infection report. Logging the report instead...\n"
+                + "Delete failed for infected attachments: [{}]\n" + "Deleted infected attachments: [{}]\n"
+                + "Scan failed attachments: [{}]", failed, deleted, scanFailedAttachments);
         }
     }
 

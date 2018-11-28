@@ -27,8 +27,6 @@ import org.xwiki.configuration.internal.AbstractDocumentConfigurationSource;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.LocalDocumentReference;
 
-import com.xpn.xwiki.XWiki;
-
 /**
  * {@link org.xwiki.configuration.ConfigurationSource} reading the values from the configuration page on the main wiki.
  *
@@ -44,13 +42,12 @@ public class AntivirusConfigurationSource extends AbstractDocumentConfigurationS
     private static final LocalDocumentReference CLASS_REFERENCE =
         new LocalDocumentReference(SPACE_NAME, "ConfigurationClass");
 
-    private static final DocumentReference DOC_REFERENCE =
-        new DocumentReference(XWiki.DEFAULT_MAIN_WIKI, SPACE_NAME, "Configuration");
+    private static final LocalDocumentReference DOC_REFERENCE = new LocalDocumentReference(SPACE_NAME, "Configuration");
 
     @Override
     protected DocumentReference getDocumentReference()
     {
-        return DOC_REFERENCE;
+        return new DocumentReference(DOC_REFERENCE, getCurrentWikiReference());
     }
 
     @Override

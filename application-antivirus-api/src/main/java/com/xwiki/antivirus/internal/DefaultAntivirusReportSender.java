@@ -37,6 +37,8 @@ import javax.mail.internet.MimeMessage;
 import org.apache.commons.collections4.IteratorUtils;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.component.manager.ComponentManager;
+import org.xwiki.component.phase.Initializable;
+import org.xwiki.component.phase.InitializationException;
 import org.xwiki.mail.MailListener;
 import org.xwiki.mail.MailSender;
 import org.xwiki.mail.MimeMessageFactory;
@@ -57,14 +59,8 @@ import com.xwiki.antivirus.AntivirusReportSender;
  */
 @Component
 @Singleton
-public class DefaultAntivirusReportSender implements AntivirusReportSender
+public class DefaultAntivirusReportSender implements AntivirusReportSender, Initializable
 {
-    private static final DocumentReference TEMPLATE_REFERENCE =
-        new DocumentReference(XWiki.DEFAULT_MAIN_WIKI, "Antivirus", "ScheduledScanReportMailTemplate");
-
-    private static final List<DocumentReference> NOTIFICATION_GROUP_REFERENCES =
-        Arrays.asList(new DocumentReference(XWiki.DEFAULT_MAIN_WIKI, "XWiki", "XWikiAdminGroup"));
-
     @Inject
     @Named("usersandgroups")
     private MimeMessageFactory<Iterator<MimeMessage>> usersAndGroupsMessageFactory;
@@ -80,6 +76,21 @@ public class DefaultAntivirusReportSender implements AntivirusReportSender
 
     @Inject
     private ComponentManager componentManager;
+
+    private DocumentReference templateReference;
+
+    private List<DocumentReference> notificationGroupReferences;
+
+    @Override
+    public void initialize() throws InitializationException
+    {
+        String mainWikiName = contextProvider.get().getMainXWiki();
+
+        this.templateReference = new DocumentReference(mainWikiName, "Antivirus", "ScheduledScanReportMailTemplate");
+
+        this.notificationGroupReferences =
+            Arrays.asList(new DocumentReference(mainWikiName, "XWiki", "XWikiAdminGroup"));
+    }
 
     @Override
     public void sendReport(Map<XWikiAttachment, Collection<String>> deletedInfectedAttachments,
@@ -111,11 +122,11 @@ public class DefaultAntivirusReportSender implements AntivirusReportSender
 
         Map<String, Object> usersAndGroupsFactoryParameters = new HashMap<>();
         usersAndGroupsFactoryParameters.put("hint", "template");
-        usersAndGroupsFactoryParameters.put("source", TEMPLATE_REFERENCE);
+        usersAndGroupsFactoryParameters.put("source", templateReference);
         usersAndGroupsFactoryParameters.put("parameters", templateFactoryParameters);
 
         Map<String, List<DocumentReference>> usersOrGroups = new HashMap<>();
-        usersOrGroups.put("groups", NOTIFICATION_GROUP_REFERENCES);
+        usersOrGroups.put("groups", notificationGroupReferences);
 
         Session session = sessionFactory.create(Collections.<String, String>emptyMap());
 
@@ -138,4 +149,5 @@ public class DefaultAntivirusReportSender implements AntivirusReportSender
 
         return result;
     }
+
 }
