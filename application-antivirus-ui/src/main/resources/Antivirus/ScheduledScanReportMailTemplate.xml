@@ -133,6 +133,11 @@
 
 &lt;p&gt;Below you will find the report for a scheduled antivirus scan that was just executed on your wiki:&lt;/p&gt;
 
+&lt;p&gt;
+  &lt;b&gt;Scan start date:&lt;/b&gt; $xwiki.formatDate($startDate)&lt;br&gt;
+  &lt;b&gt;Scan finish date:&lt;/b&gt; $xwiki.formatDate($endDate)
+&lt;/p&gt;
+
 #set ($nrOfInfections = $deletedInfectedAttachments.size() + $deleteFailedInfectedAttachments.size())
 &lt;h3&gt;Infections ($nrOfInfections):&lt;/h3&gt;
 
@@ -276,6 +281,11 @@ The XWiki Antivirus Application
 
 &lt;p&gt;Vous trouverez ci-dessous un rapport d'analyse antivirus planifié qui vient d'être exécuté sur votre wiki:&lt;/p&gt;
 
+&lt;p&gt;
+  &lt;b&gt;Date de début de l'analyse:&lt;/b&gt; $xwiki.formatDate($startDate)&lt;br&gt;
+  &lt;b&gt;Date de fin de l'analyse:&lt;/b&gt; $xwiki.formatDate($endDate)
+&lt;/p&gt;
+
 #set ($nrOfInfections = $deletedInfectedAttachments.size() + $deleteFailedInfectedAttachments.size())
 &lt;h3&gt;Infections ($nrOfInfections):&lt;/h3&gt;
 
@@ -418,6 +428,11 @@ L'application d'Antivirus pour XWiki
 &lt;p&gt;Bună, administrator al wiki-ului $wikiUrl.&lt;/p&gt;
 
 &lt;p&gt;Mai jos veți găsi raportul pentru o scanare antivirus periodică ce tocmai a fost executată pe wiki-ul dumneavoastră:&lt;/p&gt;
+
+&lt;p&gt;
+  &lt;b&gt;Data începerii scanării:&lt;/b&gt; $xwiki.formatDate($startDate)&lt;br&gt;
+  &lt;b&gt;Data finalizării scanării:&lt;/b&gt; $xwiki.formatDate($endDate)
+&lt;/p&gt;
 
 #set ($nrOfErrors = $deletedInfectedAttachments.size() + $deleteFailedInfectedAttachments.size())
 &lt;h3&gt;Infecţii ($nrOfErrors):&lt;/h3&gt;
