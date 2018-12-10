@@ -20,6 +20,7 @@
 package com.xwiki.antivirus;
 
 import java.util.Collection;
+import java.util.Date;
 import java.util.Map;
 
 import org.xwiki.component.annotation.Role;
@@ -39,9 +40,11 @@ public interface AntivirusReportSender
      * @param deleteFailedInfectedAttachments map of [attachment,list of infections] for each infected attachment for
      *            which deletion failed
      * @param scanFailedAttachments map of [attachment,exception] for each attachment that failed to be scanned
+     * @param startDate when the scheduled scan started
+     * @param endDate when the scheduled scan ended
      * @throws Exception in case of problems
      */
     void sendReport(Map<XWikiAttachment, Collection<String>> deletedInfectedAttachments,
         Map<XWikiAttachment, Collection<String>> deleteFailedInfectedAttachments,
-        Map<XWikiAttachment, Exception> scanFailedAttachments) throws Exception;
+        Map<XWikiAttachment, Exception> scanFailedAttachments, Date startDate, Date endDate) throws Exception;
 }

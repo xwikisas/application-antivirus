@@ -22,6 +22,7 @@ package com.xwiki.antivirus.internal;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -95,7 +96,7 @@ public class DefaultAntivirusReportSender implements AntivirusReportSender, Init
     @Override
     public void sendReport(Map<XWikiAttachment, Collection<String>> deletedInfectedAttachments,
         Map<XWikiAttachment, Collection<String>> deleteFailedInfectedAttachments,
-        Map<XWikiAttachment, Exception> scanFailedAttachments) throws Exception
+        Map<XWikiAttachment, Exception> scanFailedAttachments, Date startDate, Date endDate) throws Exception
     {
         XWikiContext context = contextProvider.get();
         XWiki xwiki = context.getWiki();
@@ -114,6 +115,8 @@ public class DefaultAntivirusReportSender implements AntivirusReportSender, Init
         velocityVariables.put("wikiUrl", xwiki.getExternalURL("Main.WebHome", "view", context));
         velocityVariables.put("adminUrl",
             xwiki.getExternalURL("XWiki.XWikiPreferences", "admin", "editor=globaladmin&section=antivirus", context));
+        velocityVariables.put("startDate", startDate);
+        velocityVariables.put("endDate", endDate);
 
         Map<String, Object> templateFactoryParameters = new HashMap<>();
         templateFactoryParameters.put("type", "antivirusReport");

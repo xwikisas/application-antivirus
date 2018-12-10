@@ -21,6 +21,7 @@ package com.xwiki.antivirus.internal;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -82,6 +83,8 @@ public class AntivirusJob extends AbstractJob
             return;
         }
 
+        Date startDate = new Date();
+
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug("Antivirus scheduled scan execution using engine [{}] has started...",
                 antivirusConfiguration.getDefaultEngineName());
@@ -115,8 +118,11 @@ public class AntivirusJob extends AbstractJob
                 scanFailedAttachments);
         }
 
+        Date endDate = new Date();
+
         // Send the report by email, if needed.
-        maybeSendReport(deletedInfectedAttachments, deleteFailedInfectedAttachments, scanFailedAttachments);
+        maybeSendReport(deletedInfectedAttachments, deleteFailedInfectedAttachments, scanFailedAttachments, startDate,
+            endDate);
 
         // Log the incidents in the Antivirus Log.
         logIncidents(deletedInfectedAttachments, deleteFailedInfectedAttachments,
@@ -253,7 +259,7 @@ public class AntivirusJob extends AbstractJob
 
     private void maybeSendReport(Map<XWikiAttachment, Collection<String>> deletedInfectedAttachments,
         Map<XWikiAttachment, Collection<String>> deleteFailedInfectedAttachments,
-        Map<XWikiAttachment, Exception> scanFailedAttachments)
+        Map<XWikiAttachment, Exception> scanFailedAttachments, Date startDate, Date endDate)
     {
         AntivirusConfiguration antivirusConfiguration = Utils.getComponent(AntivirusConfiguration.class);
 
@@ -266,15 +272,18 @@ public class AntivirusJob extends AbstractJob
 
         try {
             AntivirusReportSender reportSender = Utils.getComponent(AntivirusReportSender.class);
-            reportSender.sendReport(deletedInfectedAttachments, deleteFailedInfectedAttachments, scanFailedAttachments);
+            reportSender.sendReport(deletedInfectedAttachments, deleteFailedInfectedAttachments, scanFailedAttachments,
+                startDate, endDate);
         } catch (Exception e) {
             // XWikiAttachment.toString() is not very useful when logging, so we need something better.
             Map<AttachmentReference, Collection<String>> failed =
                 getLoggingFriendlyMap(deleteFailedInfectedAttachments);
             Map<AttachmentReference, Collection<String>> deleted = getLoggingFriendlyMap(deletedInfectedAttachments);
-            LOGGER.error("Failed to send the infection report. Logging the report instead...\n"
-                + "Delete failed for infected attachments: [{}]\n" + "Deleted infected attachments: [{}]\n"
-                + "Scan failed attachments: [{}]", failed, deleted, scanFailedAttachments);
+            LOGGER.error(
+                "Failed to send the infection report. Logging the report instead...\n"
+                    + "Delete failed for infected attachments: [{}]\n" + "Deleted infected attachments: [{}]\n"
+                    + "Scan failed attachments: [{}]\n" + "Start date: [{}]\n" + "End date: [{}]",
+                failed, deleted, scanFailedAttachments, startDate, endDate);
         }
     }
 
