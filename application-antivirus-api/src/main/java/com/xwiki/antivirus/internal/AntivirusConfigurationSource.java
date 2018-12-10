@@ -26,6 +26,7 @@ import org.xwiki.component.annotation.Component;
 import org.xwiki.configuration.internal.AbstractDocumentConfigurationSource;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.LocalDocumentReference;
+import org.xwiki.model.reference.WikiReference;
 
 /**
  * {@link org.xwiki.configuration.ConfigurationSource} reading the values from the configuration page on the main wiki.
@@ -47,7 +48,7 @@ public class AntivirusConfigurationSource extends AbstractDocumentConfigurationS
     @Override
     protected DocumentReference getDocumentReference()
     {
-        return new DocumentReference(DOC_REFERENCE, getCurrentWikiReference());
+        return new DocumentReference(DOC_REFERENCE, new WikiReference(this.wikiManager.getMainWikiId()));
     }
 
     @Override
