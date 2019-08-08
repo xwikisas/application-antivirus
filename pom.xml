@@ -35,7 +35,7 @@
     <xwiki.jacoco.instructionRatio>0.00</xwiki.jacoco.instructionRatio>
     <xwiki.issueManagement.system>GitHub</xwiki.issueManagement.system>
     <xwiki.issueManagement.url>https://github.com/xwikisas/application-antivirus/issues</xwiki.issueManagement.url>
-    <licensing.version>1.13</licensing.version>
+    <licensing.version>1.13.9</licensing.version>
     <!-- Disabling revapi since, for some reason, at least for the 9.2 build, revapi is complaining about changes in AttachmentReference,
       DocumentReference and EntityReference, which are classes from the xwiki-platform-model, a completely different project than
       the current one. -->
