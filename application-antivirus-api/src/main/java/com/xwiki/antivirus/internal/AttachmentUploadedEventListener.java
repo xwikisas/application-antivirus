@@ -28,6 +28,7 @@ import java.util.Map;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.inject.Provider;
 import javax.inject.Singleton;
 
 import org.slf4j.Logger;
@@ -71,8 +72,12 @@ public class AttachmentUploadedEventListener extends AbstractEventListener
     @Inject
     private AntivirusConfiguration antivirusConfiguration;
 
+    /**
+     * Lazy-load the Licensor because it needs the database to be ready (it needs the instance id in order to validate
+     * the licenses and the instance id is stored in the database).
+     */
     @Inject
-    private Licensor licensor;
+    private Provider<Licensor> licensorProvider;
 
     @Inject
     private AntivirusLog antivirusLog;
@@ -113,7 +118,8 @@ public class AttachmentUploadedEventListener extends AbstractEventListener
         }
 
         // Skip if the license has expired.
-        if (!licensor.hasLicensure(new DocumentReference(context.getMainXWiki(), "Antivirus", "ConfigurationClass"))) {
+        if (!licensorProvider.get()
+            .hasLicensure(new DocumentReference(context.getMainXWiki(), "Antivirus", "ConfigurationClass"))) {
             logger.warn("Skipping attachment scan for event [{}] by user [{}] on document [{}]. "
                 + "No valid Antivirus license has been found. Please visit the 'Licenses' section in Administration.",
                 event.getClass().getName(), context.getUserReference(), doc.getDocumentReference());
