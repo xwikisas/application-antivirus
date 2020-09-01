@@ -43,21 +43,44 @@
 
 {{velocity wiki="false"}}
 #set ($extra = '')
-#set ($params = [])
-#if ("$!request.space" != '')
-  #set ($extra = "${extra} and doc.space = ?")
-  #set ($discard = $params.add($request.space))
-#end
-#if ("$!request.parent" != '')
-  #set ($extra = "${extra} and doc.parent = ?")
-  #set ($discard = $params.add($request.parent))
-#end
-#if ("$!request.orphaned" == '1')
-  #set ($homepage = $services.wiki.getById($services.wiki.currentWikiId).mainPageReference)
-  #set ($homepageFullName = $services.model.serialize($homepage, 'local'))
-  ## On Oracle the empty parent is actually null.
-  #set ($extra = "${extra} and (doc.parent = '' or doc.parent is null) and doc.fullName &lt;&gt; ?")
-  #set ($discard = $params.add($homepageFullName))
+## Since the Upgrade to Hibernate 5.4.3, the usage of ? based parameters in HQL request is deprecated.
+## The deprecated usage is fixed in LiveTableResultsMacros, in 11.7-rc-1, for XWIKI-16536.
+## TODO: Clean the following if block when the parent of the Antivirus app will be the latest of XWiki 11.x.
+#set ($checkedExtension = 'org.xwiki.commons:xwiki-commons-velocity')
+#if ($services.extension.core.getCoreExtension($checkedExtension).id.version.compareTo('11.7-rc-1') &gt;= 0)
+  #set ($params = {})
+  #if ("$!request.space" != '')
+    #set ($extra = "${extra} and doc.space = :doc_space")
+    #set ($discard = $params.put('doc_space', $request.space))
+  #end
+  #if ("$!request.parent" != '')
+    #set ($extra = "${extra} and doc.parent = :doc_parent")
+    #set ($discard = $params.put('doc_parent', $request.parent))
+  #end
+  #if ("$!request.orphaned" == '1')
+    #set ($homepage = $services.wiki.getById($services.wiki.currentWikiId).mainPageReference)
+    #set ($homepageFullName = $services.model.serialize($homepage, 'local'))
+    ## On Oracle the empty parent is actually null.
+    #set ($extra = "${extra} and (doc.parent = '' or doc.parent is null) and doc.fullName &lt;&gt; :homepageFullName")
+    #set ($discard = $params.put('homepageFullName', $homepageFullName))
+  #end
+#else
+  #set ($params = [])
+  #if ("$!request.space" != '')
+    #set ($extra = "${extra} and doc.space = ?")
+    #set ($discard = $params.add($request.space))
+  #end
+  #if ("$!request.parent" != '')
+    #set ($extra = "${extra} and doc.parent = ?")
+    #set ($discard = $params.add($request.parent))
+  #end
+  #if ("$!request.orphaned" == '1')
+    #set ($homepage = $services.wiki.getById($services.wiki.currentWikiId).mainPageReference)
+    #set ($homepageFullName = $services.model.serialize($homepage, 'local'))
+    ## On Oracle the empty parent is actually null.
+    #set ($extra = "${extra} and (doc.parent = '' or doc.parent is null) and doc.fullName &lt;&gt; ?")
+    #set ($discard = $params.add($homepageFullName))
+  #end
 #end
 #if($xcontext.action == 'get' &amp;&amp; "$!{request.outputSyntax}" == 'plain')
   $response.setContentType('application/json')
