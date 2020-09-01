@@ -23,7 +23,7 @@
   <parent>
     <groupId>com.xwiki.antivirus</groupId>
     <artifactId>application-antivirus</artifactId>
-    <version>1.3</version>
+    <version>1.4-SNAPSHOT</version>
   </parent>
   <artifactId>application-antivirus-api</artifactId>
   <name>Antivirus - API</name>
