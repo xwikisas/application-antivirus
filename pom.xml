@@ -23,7 +23,7 @@
   <parent>
     <groupId>com.xwiki.parent</groupId>
     <artifactId>xwikisas-parent-platform</artifactId>
-    <version>9.2</version>
+    <version>9.11-5</version>
   </parent>
   <groupId>com.xwiki.antivirus</groupId>
   <artifactId>application-antivirus</artifactId>
@@ -35,13 +35,7 @@
     <xwiki.jacoco.instructionRatio>0.00</xwiki.jacoco.instructionRatio>
     <xwiki.issueManagement.system>GitHub</xwiki.issueManagement.system>
     <xwiki.issueManagement.url>https://github.com/xwikisas/application-antivirus/issues</xwiki.issueManagement.url>
-    <licensing.version>1.14.4</licensing.version>
-    <!-- Disabling revapi since, for some reason, at least for the 9.2 build, revapi is complaining about changes in AttachmentReference,
-      DocumentReference and EntityReference, which are classes from the xwiki-platform-model, a completely different project than
-      the current one. -->
-    <xwiki.revapi.skip>true</xwiki.revapi.skip>
-    <!-- We don't use jira for this project. -->
-    <xwiki.release.jira.skip>true</xwiki.release.jira.skip>
+    <licensing.version>1.16</licensing.version>
   </properties>
   <scm>
     <connection>scm:git:git://github.com/xwikisas/application-antivirus.git</connection>
@@ -71,106 +65,4 @@
       </snapshots>
     </repository>
   </repositories>
-  <!-- The dependency for application-licensing-licensor-api is causing a lot of enforcer RequireUpperBoundDeps problems,
-    due to the fact that its transitive deps are older that the ones needed by this project but, at the same time, are higher
-    in the dependency tree, so we need to manage them explicitly to the newer versions, required by the project. -->
-  <dependencyManagement>
-    <dependencies>
-      <dependency>
-        <groupId>org.xwiki.platform</groupId>
-        <artifactId>xwiki-platform-skin-skinx</artifactId>
-        <version>${platform.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.xwiki.platform</groupId>
-        <artifactId>xwiki-platform-localization-script</artifactId>
-        <version>${platform.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.xwiki.platform</groupId>
-        <artifactId>xwiki-platform-rendering-macro-velocity</artifactId>
-        <version>${platform.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.xwiki.rendering</groupId>
-        <artifactId>xwiki-rendering-macro-html</artifactId>
-        <version>${rendering.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.xwiki.platform</groupId>
-        <artifactId>xwiki-platform-bridge</artifactId>
-        <version>${platform.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.xwiki.platform</groupId>
-        <artifactId>xwiki-platform-security-api</artifactId>
-        <version>${platform.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.xwiki.platform</groupId>
-        <artifactId>xwiki-platform-job-script</artifactId>
-        <version>${platform.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.xwiki.platform</groupId>
-        <artifactId>xwiki-platform-extension-handler-xar</artifactId>
-        <version>${platform.version}</version>
-      </dependency>
-       <dependency>
-        <groupId>org.xwiki.platform</groupId>
-        <artifactId>xwiki-platform-instance</artifactId>
-        <version>${platform.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.xwiki.commons</groupId>
-        <artifactId>xwiki-commons-crypto-common</artifactId>
-        <version>${commons.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.xwiki.commons</groupId>
-        <artifactId>xwiki-commons-crypto-pkix</artifactId>
-        <version>${commons.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.xwiki.commons</groupId>
-        <artifactId>xwiki-commons-extension-api</artifactId>
-        <version>${commons.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.xwiki.commons</groupId>
-        <artifactId>xwiki-commons-velocity</artifactId>
-        <version>${commons.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.xwiki.commons</groupId>
-        <artifactId>xwiki-commons-component-api</artifactId>
-        <version>${commons.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.xwiki.commons</groupId>
-        <artifactId>xwiki-commons-properties</artifactId>
-        <version>${commons.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.xwiki.commons</groupId>
-        <artifactId>xwiki-commons-observation-api</artifactId>
-        <version>${commons.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.xwiki.commons</groupId>
-        <artifactId>xwiki-commons-configuration-api</artifactId>
-        <version>${commons.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.xwiki.commons</groupId>
-        <artifactId>xwiki-commons-context</artifactId>
-        <version>${commons.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.gagravarr</groupId>
-        <artifactId>vorbis-java-core</artifactId>
-        <version>0.8</version>
-      </dependency>
-    </dependencies>
-  </dependencyManagement>
 </project>
