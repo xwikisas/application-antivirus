@@ -31,8 +31,8 @@
   <parent>Antivirus.WebHome</parent>
   <author>xwiki:XWiki.Admin</author>
   <contentAuthor>xwiki:XWiki.Admin</contentAuthor>
-  <date>1539268255000</date>
-  <contentUpdateDate>1539265238000</contentUpdateDate>
+  <date>1598963506000</date>
+  <contentUpdateDate>1598963506000</contentUpdateDate>
   <version>1.1</version>
   <title>$services.localization.render('admin.preferences.title')</title>
   <comment/>
@@ -623,17 +623,20 @@
         <classType>com.xpn.xwiki.objects.classes.StringClass</classType>
       </ldap_exclude_group>
       <ldap_fields_mapping>
+        <contenttype>PureText</contenttype>
         <customDisplay/>
         <disabled>0</disabled>
+        <editor>PureText</editor>
         <name>ldap_fields_mapping</name>
         <number>61</number>
         <picker>0</picker>
         <prettyName>Ldap user fields mapping</prettyName>
+        <rows>1</rows>
         <size>60</size>
         <unmodifiable>0</unmodifiable>
         <validationMessage/>
         <validationRegExp/>
-        <classType>com.xpn.xwiki.objects.classes.StringClass</classType>
+        <classType>com.xpn.xwiki.objects.classes.TextAreaClass</classType>
       </ldap_fields_mapping>
       <ldap_group_mapping>
         <contenttype>PureText</contenttype>
