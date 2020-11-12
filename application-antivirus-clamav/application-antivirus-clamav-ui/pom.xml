@@ -26,7 +26,7 @@
     <version>1.3.2-SNAPSHOT</version>
   </parent>
   <artifactId>application-antivirus-clamav-ui</artifactId>
-  <description>Protects attachments uploaded to XWiki pages by scanning them for viruses and malware infections.</description>
+  <description>Protect attachments uploaded to XWiki pages by scanning them for viruses and malware infections. The app can be purchased individually or part of the XWiki Pro package. Try it free.</description>
   <packaging>xar</packaging>
   <name>Antivirus - ClamAV - UI</name>
   <properties>
