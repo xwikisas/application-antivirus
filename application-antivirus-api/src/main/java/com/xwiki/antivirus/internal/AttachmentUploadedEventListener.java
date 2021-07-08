@@ -110,7 +110,14 @@ public class AttachmentUploadedEventListener extends AbstractEventListener
             return;
         }
 
-        List<XWikiAttachment> attachmentsToScan = getAttachmentsToScan(event, doc, context);
+        // doc.getAttachmentDiff() seems to have side-effects on the (original) doc on which it is called (on its
+        // attachments, to be more precise). In order to not disturb other handlers in the event handling chain, we
+        // choose to play it safe and work with a clone.
+        // See https://jira.xwiki.org/browse/XWIKI-18775
+        XWikiDocument safeDoc = doc.clone();
+        safeDoc.setOriginalDocument(doc.getOriginalDocument().clone());
+
+        List<XWikiAttachment> attachmentsToScan = getAttachmentsToScan(event, safeDoc, context);
 
         // Skip if no attachments were added or modified.
         if (attachmentsToScan.isEmpty()) {
@@ -122,7 +129,7 @@ public class AttachmentUploadedEventListener extends AbstractEventListener
             .hasLicensure(new DocumentReference(context.getMainXWiki(), "Antivirus", "ConfigurationClass"))) {
             logger.warn("Skipping attachment scan for event [{}] by user [{}] on document [{}]. "
                 + "No valid Antivirus license has been found. Please visit the 'Licenses' section in Administration.",
-                event.getClass().getName(), context.getUserReference(), doc.getDocumentReference());
+                event.getClass().getName(), context.getUserReference(), safeDoc.getDocumentReference());
             return;
         }
 
@@ -135,7 +142,7 @@ public class AttachmentUploadedEventListener extends AbstractEventListener
             logger.error(
                 "Failed to load antivirus engine [{}] to scan attachments for event [{}] by user [{}] on document [{}]",
                 antivirusConfiguration.getDefaultEngineName(), event.getClass().getName(), context.getUserReference(),
-                doc.getDocumentReference(), e);
+                safeDoc.getDocumentReference(), e);
             return;
         }
 

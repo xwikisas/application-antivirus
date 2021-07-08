@@ -121,6 +121,8 @@ public class AttachmentUploadedEventListenerTest
         docReference = new DocumentReference("wiki", "Space", "Page");
         when(doc.getDocumentReference()).thenReturn(docReference);
 
+        when(doc.clone()).thenReturn(doc);
+
         orignalDoc = mock(XWikiDocument.class);
         when(doc.getOriginalDocument()).thenReturn(orignalDoc);
 
@@ -182,6 +184,9 @@ public class AttachmentUploadedEventListenerTest
 
         // Make sure execution stops before checking license.
         verifyZeroInteractions(licensor);
+
+        // Make sure no scanning is performed.
+        verifyZeroInteractions(engine);
     }
 
     @Test
@@ -192,10 +197,11 @@ public class AttachmentUploadedEventListenerTest
 
         listener.onEvent(event, doc, context);
 
-        verify(doc, times(1)).getOriginalDocument();
-
         // Make sure execution stops before checking license.
         verifyZeroInteractions(licensor);
+
+        // Make sure no scanning is performed.
+        verifyZeroInteractions(engine);
     }
 
     @Test
