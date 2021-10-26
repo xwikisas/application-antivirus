@@ -60,6 +60,8 @@ Antivirus.ClamavConfigurationClass_port_hint=Port number used to access the Clam
         <cache>0</cache>
         <disabled>0</disabled>
         <displayType>select</displayType>
+        <freeText>forbidden</freeText>
+        <largeStorage>0</largeStorage>
         <multiSelect>0</multiSelect>
         <name>scope</name>
         <number>1</number>
