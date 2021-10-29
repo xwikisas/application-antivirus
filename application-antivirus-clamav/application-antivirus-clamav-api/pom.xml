@@ -23,7 +23,7 @@
   <parent>
     <groupId>com.xwiki.antivirus</groupId>
     <artifactId>application-antivirus-clamav</artifactId>
-    <version>1.5-SNAPSHOT</version>
+    <version>1.4.1</version>
   </parent>
   <artifactId>application-antivirus-clamav-api</artifactId>
   <name>Antivirus - ClamAV - API</name>
