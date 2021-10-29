@@ -27,7 +27,7 @@
   </parent>
   <groupId>com.xwiki.antivirus</groupId>
   <artifactId>application-antivirus</artifactId>
-  <version>1.4.1</version>
+  <version>1.5-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>Antivirus - Parent POM</name>
   <description>Antivirus Application</description>
@@ -43,7 +43,7 @@
     <connection>scm:git:git://github.com/xwikisas/application-antivirus.git</connection>
     <developerConnection>scm:git:git@github.com:xwikisas/application-antivirus.git</developerConnection>
     <url>https://github.com/xwikisas/application-antivirus/tree/master</url>
-    <tag>application-antivirus-1.4.1</tag>
+    <tag>HEAD</tag>
   </scm>
   <modules>
     <module>application-antivirus-api</module>
