@@ -27,6 +27,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import org.slf4j.Logger;
@@ -241,6 +242,15 @@ public class AntivirusJob extends AbstractJob
         } catch (Exception e) {
             // Log the exception.
             LOGGER.error("Failed to scan attachment [{}]", attachment.getReference(), e);
+            // Files larger than the ClamAV configured size (default 25MB) will fail to be scanned. Attempting to scan
+            // will throw the following errors. In the scan report we want to display a user friendly message, so we
+            // create a new exception.
+            String rootExceptionMessage = ExceptionUtils.getRootCauseMessage(e);
+            if (rootExceptionMessage.equals("IOException: Broken pipe") ||
+                rootExceptionMessage.equals("ScanFailureException: Scan failure: INSTREAM size limit exceeded. ERROR"))
+            {
+                e = new AntivirusException("File size too large");
+            }
             // Add it to the list of failed attachments, to be sent in the report.
             scanFailedAttachments.put(attachment, e);
             // Nothing more to do for this attachment.
@@ -265,7 +275,8 @@ public class AntivirusJob extends AbstractJob
 
         // Skip sending the report only when no infected attachments are found and report sending is not forced.
         if (!antivirusConfiguration.shouldAlwaysSendReport() && deletedInfectedAttachments.isEmpty()
-            && deleteFailedInfectedAttachments.isEmpty()) {
+            && deleteFailedInfectedAttachments.isEmpty())
+        {
             LOGGER.debug("No-infections scheduled scan report sending is skipped. 'Alway Send Report' is disabled.");
             return;
         }

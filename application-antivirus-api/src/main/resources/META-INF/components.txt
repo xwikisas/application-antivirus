@@ -1,4 +1,5 @@
 com.xwiki.antivirus.internal.AntivirusConfigurationSource
+com.xwiki.antivirus.internal.AntivirusJobSchedulerListener
 com.xwiki.antivirus.internal.AttachmentUploadedEventListener
 com.xwiki.antivirus.internal.DefaultAntivirusConfiguration
 com.xwiki.antivirus.internal.DefaultAntivirusLog

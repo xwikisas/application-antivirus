@@ -88,6 +88,15 @@
       $configDoc.display('alwaysSendReport', 'edit')
 
       {{html clean="false"}}&lt;/dd&gt;
+      &lt;dt&gt;
+        &lt;label for="Antivirus.ConfigurationClass_0_maxFileSize">$configClass.maxFileSize.translatedPrettyName&lt;/label&gt;
+        &lt;span class='xHint'&gt;$services.localization.render('Antivirus.ConfigurationClass_maxFileSize_hint')&lt;/span&gt;
+      &lt;/dt&gt;
+      &lt;dd&gt;{{/html}}
+
+      $configDoc.display('maxFileSize', 'edit')
+
+      {{html clean="false"}}&lt;/dd&gt;
     &lt;/dl&gt;
     &lt;div class='buttonwrapper'&gt;
       &lt;input value="$services.localization.render('admin.save')" class='button' type='submit'&gt;
