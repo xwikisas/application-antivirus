@@ -87,6 +87,20 @@
       <validationRegExp/>
       <classType>com.xpn.xwiki.objects.classes.BooleanClass</classType>
     </enabled>
+    <maxFileSize>
+      <customDisplay/>
+      <disabled>0</disabled>
+      <hint/>
+      <name>maxFileSize</name>
+      <number>4</number>
+      <numberType>integer</numberType>
+      <prettyName>maxFileSize</prettyName>
+      <size>30</size>
+      <unmodifiable>0</unmodifiable>
+      <validationMessage/>
+      <validationRegExp/>
+      <classType>com.xpn.xwiki.objects.classes.NumberClass</classType>
+    </maxFileSize>
   </class>
   <object>
     <name>Antivirus.ConfigurationClass</name>

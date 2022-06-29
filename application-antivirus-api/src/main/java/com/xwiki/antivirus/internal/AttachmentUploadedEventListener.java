@@ -45,6 +45,7 @@ import org.xwiki.observation.event.CancelableEvent;
 import org.xwiki.observation.event.Event;
 
 import com.xpn.xwiki.XWikiContext;
+import com.xpn.xwiki.XWikiException;
 import com.xpn.xwiki.doc.AttachmentDiff;
 import com.xpn.xwiki.doc.XWikiAttachment;
 import com.xpn.xwiki.doc.XWikiDocument;
@@ -126,9 +127,10 @@ public class AttachmentUploadedEventListener extends AbstractEventListener
 
         // Skip if the license has expired.
         if (!licensorProvider.get()
-            .hasLicensure(new DocumentReference(context.getMainXWiki(), "Antivirus", "ConfigurationClass"))) {
+            .hasLicensure(new DocumentReference(context.getMainXWiki(), "Antivirus", "ConfigurationClass")))
+        {
             logger.warn("Skipping attachment scan for event [{}] by user [{}] on document [{}]. "
-                + "No valid Antivirus license has been found. Please visit the 'Licenses' section in Administration.",
+                    + "No valid Antivirus license has been found. Please visit the 'Licenses' section in Administration.",
                 event.getClass().getName(), context.getUserReference(), safeDoc.getDocumentReference());
             return;
         }
@@ -164,6 +166,16 @@ public class AttachmentUploadedEventListener extends AbstractEventListener
         Map<AttachmentReference, Collection<String>> infectedAttachments = new HashMap<>();
         for (XWikiAttachment attachment : attachmentsToScan) {
             try {
+                // Compare the attachment size (bytes) to the maximum configured size (MB). Conversion needed.
+                long attachmentSize = attachment.getContentLongSize(context);
+                int maxFileSize = antivirusConfiguration.getMaxFileSize();
+                if (attachmentSize > maxFileSize * 1_000_000L) {
+                    logger.warn(
+                        "Attachment [{}] is larger than [{}MB] and will be skipped during event [{}] by user [{}]."
+                            + " The file will be scanned during the scheduled scan.",
+                        attachment.getReference(), maxFileSize, event.getClass().getName(), context.getUserReference());
+                    continue;
+                }
                 ScanResult scanResult = antivirus.scan(attachment);
                 if (scanResult.isClean()) {
                     continue;
@@ -178,7 +190,7 @@ public class AttachmentUploadedEventListener extends AbstractEventListener
                 // Save the incident in the log.
                 antivirusLog.log(attachment, scanResult.getfoundViruses(), "blocked", "upload",
                     antivirusConfiguration.getDefaultEngineName());
-            } catch (AntivirusException e) {
+            } catch (AntivirusException | XWikiException e) {
                 logger.error("Failed to scan attachment [{}] during event [{}] by user [{}]", attachment.getReference(),
                     event.getClass().getName(), context.getUserReference(), e);
             }

@@ -45,4 +45,9 @@ public interface AntivirusConfiguration
      *         no infection has been detected
      */
     boolean shouldAlwaysSendReport();
+
+    /**
+     * @return the maximum file size in MB for which a scan should be performed at upload time
+     */
+    int getMaxFileSize();
 }

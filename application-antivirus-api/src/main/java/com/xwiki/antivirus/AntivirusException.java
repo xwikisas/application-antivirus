@@ -36,4 +36,12 @@ public class AntivirusException extends Exception
     {
         super(message, cause);
     }
+
+    /**
+     * @param message the exception message
+     */
+    public AntivirusException(String message)
+    {
+        super(message);
+    }
 }

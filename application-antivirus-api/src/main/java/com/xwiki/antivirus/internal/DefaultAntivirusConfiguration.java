@@ -58,4 +58,10 @@ public class DefaultAntivirusConfiguration implements AntivirusConfiguration
     {
         return configuration.getProperty("alwaysSendReport", 1) == 1;
     }
+
+    @Override
+    public int getMaxFileSize()
+    {
+        return configuration.getProperty("maxFileSize", 25);
+    }
 }
