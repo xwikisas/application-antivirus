@@ -283,8 +283,10 @@ public class AntivirusJob extends AbstractJob {
             // will throw the following errors. In the scan report we want to display a user friendly message, so we
             // create a new exception.
             String rootExceptionMessage = ExceptionUtils.getRootCauseMessage(e);
-            if (rootExceptionMessage.equals("IOException: Broken pipe") ||
-                    rootExceptionMessage.equals("ScanFailureException: Scan failure: INSTREAM size limit exceeded. ERROR")) {
+            List<String> knownErrors = Arrays.asList(
+                "IOException: Broken pipe",
+                "ScanFailureException: Scan failure: INSTREAM size limit exceeded. ERROR");
+            if (knownErrors.contains(rootExceptionMessage)) {
                 e = new AntivirusException("File size too large");
             }
             // Add it to the list of failed attachments, to be sent in the report.

@@ -47,7 +47,7 @@ public interface AntivirusConfiguration
     boolean shouldAlwaysSendReport();
 
     /**
-     * @return the maximum file size for which a scan should be performed at upload time
+     * @return the maximum file size in MB for which a scan should be performed at upload time
      */
     int getMaxFileSize();
 }

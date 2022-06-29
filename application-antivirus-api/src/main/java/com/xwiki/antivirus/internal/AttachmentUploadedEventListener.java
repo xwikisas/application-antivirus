@@ -166,6 +166,7 @@ public class AttachmentUploadedEventListener extends AbstractEventListener
         Map<AttachmentReference, Collection<String>> infectedAttachments = new HashMap<>();
         for (XWikiAttachment attachment : attachmentsToScan) {
             try {
+                // Compare the attachment size (bytes) to the maximum configured size (MB). Conversion needed.
                 long attachmentSize = attachment.getContentLongSize(context);
                 int maxFileSize = antivirusConfiguration.getMaxFileSize();
                 if (attachmentSize > maxFileSize * 1_000_000L) {
