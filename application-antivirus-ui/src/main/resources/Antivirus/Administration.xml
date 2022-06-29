@@ -56,8 +56,8 @@
     &lt;/div&gt;
     &lt;dl&gt;
       &lt;dt&gt;
-        &lt;label for="Antivirus.ConfigurationClass_0_enabled"&gt;$configClass.enabled.translatedPrettyName&lt;/label&gt;
-        &lt;span class='xHint'&gt;$services.localization.render('Antivirus.ConfigurationClass_enabled_hint')&lt;/span&gt;
+        &lt;label for="Antivirus.ConfigurationClass_0_enabled"&gt;$escapetool.xml($configClass.enabled.translatedPrettyName)&lt;/label&gt;
+        &lt;span class='xHint'&gt;$escapetool.xml($configClass.enabled.hint)&lt;/span&gt;
       &lt;/dt&gt;
       &lt;dd&gt;{{/html}}
 
@@ -66,8 +66,8 @@
       {{html clean="false"}}&lt;/dd&gt;
 
       &lt;dt&gt;
-        &lt;label for="Antivirus.ConfigurationClass_0_defaultEngineName"&gt;$configClass.defaultEngineName.translatedPrettyName&lt;/label&gt;
-        &lt;span class='xHint'&gt;$services.localization.render('Antivirus.ConfigurationClass_defaultEngineName_hint')&lt;/span&gt;
+        &lt;label for="Antivirus.ConfigurationClass_0_defaultEngineName"&gt;$escapetool.xml($configClass.defaultEngineName.translatedPrettyName)&lt;/label&gt;
+        &lt;span class='xHint'&gt;$escapetool.xml($configClass.defaultEngineName.hint)&lt;/span&gt;
       &lt;/dt&gt;
       &lt;dd&gt;
         &lt;select name="Antivirus.ConfigurationClass_0_defaultEngineName" id="Antivirus.ConfigurationClass_0_defaultEngineName"&gt;
@@ -80,8 +80,8 @@
       &lt;/dd&gt;
 
       &lt;dt&gt;
-        &lt;label for="Antivirus.ConfigurationClass_0_alwaysSendReport"&gt;$configClass.alwaysSendReport.translatedPrettyName&lt;/label&gt;
-        &lt;span class='xHint'&gt;$services.localization.render('Antivirus.ConfigurationClass_alwaysSendReport_hint')&lt;/span&gt;
+        &lt;label for="Antivirus.ConfigurationClass_0_alwaysSendReport"&gt;$escapetool.xml($configClass.alwaysSendReport.translatedPrettyName)&lt;/label&gt;
+        &lt;span class='xHint'&gt;$escapetool.xml($configClass.alwaysSendReport.hint)&lt;/span&gt;
       &lt;/dt&gt;
       &lt;dd&gt;{{/html}}
 
@@ -89,8 +89,8 @@
 
       {{html clean="false"}}&lt;/dd&gt;
       &lt;dt&gt;
-        &lt;label for="Antivirus.ConfigurationClass_0_maxFileSize">$configClass.maxFileSize.translatedPrettyName&lt;/label&gt;
-        &lt;span class='xHint'&gt;$services.localization.render('Antivirus.ConfigurationClass_maxFileSize_hint')&lt;/span&gt;
+        &lt;label for="Antivirus.ConfigurationClass_0_maxFileSize">$escapetool.xml($configClass.maxFileSize.translatedPrettyName)&lt;/label&gt;
+        &lt;span class='xHint'&gt;$escapetool.xml($configClass.maxFileSize.hint)&lt;/span&gt;
       &lt;/dt&gt;
       &lt;dd&gt;{{/html}}
 

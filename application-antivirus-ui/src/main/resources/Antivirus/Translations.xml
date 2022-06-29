@@ -45,7 +45,7 @@ Antivirus.ConfigurationClass_defaultEngineName_hint=The antivirus engine to use 
 Antivirus.ConfigurationClass_alwaysSendReport=Always Send Report
 Antivirus.ConfigurationClass_alwaysSendReport_hint=If the report at the end of a Scheduled Scan should always be sent to the admins, even when no infection has been detected.
 Antivirus.ConfigurationClass_maxFileSize=Maximum File Size
-Antivirus.ConfigurationClass_maxFileSize_hint=The maximum file size for which a scan should be performed at upload time.
+Antivirus.ConfigurationClass_maxFileSize_hint=The maximum file size for which a scan should be performed at upload time (the scheduled scans won't be affected by this setting).
 
 antivirus.extension.name=Antivirus Application
 
