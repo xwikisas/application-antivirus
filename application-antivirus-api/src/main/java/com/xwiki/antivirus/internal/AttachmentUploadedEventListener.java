@@ -19,13 +19,17 @@
  */
 package com.xwiki.antivirus.internal;
 
-import com.xpn.xwiki.XWikiContext;
-import com.xpn.xwiki.XWikiException;
-import com.xpn.xwiki.doc.AttachmentDiff;
-import com.xpn.xwiki.doc.XWikiAttachment;
-import com.xpn.xwiki.doc.XWikiDocument;
-import com.xwiki.antivirus.*;
-import com.xwiki.licensing.Licensor;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.inject.Inject;
+import javax.inject.Named;
+import javax.inject.Provider;
+import javax.inject.Singleton;
 
 import org.slf4j.Logger;
 import org.xwiki.bridge.event.DocumentCreatingEvent;
@@ -40,12 +44,17 @@ import org.xwiki.observation.AbstractEventListener;
 import org.xwiki.observation.event.CancelableEvent;
 import org.xwiki.observation.event.Event;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Provider;
-import javax.inject.Singleton;
-
-import java.util.*;
+import com.xpn.xwiki.XWikiContext;
+import com.xpn.xwiki.XWikiException;
+import com.xpn.xwiki.doc.AttachmentDiff;
+import com.xpn.xwiki.doc.XWikiAttachment;
+import com.xpn.xwiki.doc.XWikiDocument;
+import com.xwiki.antivirus.AntivirusConfiguration;
+import com.xwiki.antivirus.AntivirusEngine;
+import com.xwiki.antivirus.AntivirusException;
+import com.xwiki.antivirus.AntivirusLog;
+import com.xwiki.antivirus.ScanResult;
+import com.xwiki.licensing.Licensor;
 
 /**
  * Listener for whenever an attachment is added to or updated on a document. Each time, each affected attachment is
