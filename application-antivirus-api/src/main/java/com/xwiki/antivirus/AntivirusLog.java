@@ -19,11 +19,10 @@
  */
 package com.xwiki.antivirus;
 
-import java.util.Collection;
-
+import com.xpn.xwiki.doc.XWikiAttachment;
 import org.xwiki.component.annotation.Role;
 
-import com.xpn.xwiki.doc.XWikiAttachment;
+import java.util.Collection;
 
 /**
  * Logs an Antivirus incident.
@@ -38,7 +37,7 @@ public interface AntivirusLog
      *
      * @param attachment the affected attachment
      * @param infections the infections detected for the attachment
-     * @param action the action that was taken for the attachment (e.g. "blocked", "deleted", "deleteFailed")
+     * @param action the action that was taken for the attachment (e.g. "blocked", "deleted", "deleteFailed", "scanFailed")
      * @param detectionContext the context in which the infection was detected (e.g. "upload", "scheduledScan")
      * @param engineHint the engine implementation hint used to detect the infections
      * @throws AntivirusException in case a problem occurs

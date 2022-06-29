@@ -19,14 +19,12 @@
  */
 package com.xwiki.antivirus.internal;
 
-import java.util.Collections;
-import java.util.List;
-
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Provider;
-import javax.inject.Singleton;
-
+import com.xpn.xwiki.XWikiContext;
+import com.xpn.xwiki.XWikiException;
+import com.xpn.xwiki.doc.XWikiDocument;
+import com.xpn.xwiki.objects.BaseObject;
+import com.xpn.xwiki.plugin.scheduler.JobState;
+import com.xpn.xwiki.plugin.scheduler.SchedulerPlugin;
 import org.quartz.SchedulerException;
 import org.quartz.Trigger.TriggerState;
 import org.xwiki.classloader.ClassLoaderManager;
@@ -41,12 +39,12 @@ import org.xwiki.observation.AbstractEventListener;
 import org.xwiki.observation.event.Event;
 import org.xwiki.wiki.descriptor.WikiDescriptorManager;
 
-import com.xpn.xwiki.XWikiContext;
-import com.xpn.xwiki.XWikiException;
-import com.xpn.xwiki.doc.XWikiDocument;
-import com.xpn.xwiki.objects.BaseObject;
-import com.xpn.xwiki.plugin.scheduler.JobState;
-import com.xpn.xwiki.plugin.scheduler.SchedulerPlugin;
+import javax.inject.Inject;
+import javax.inject.Named;
+import javax.inject.Provider;
+import javax.inject.Singleton;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Ensure that AntivirusJob is scheduled after antivirus install. Reschedule AntivirusJob to work around XWIKI-14494:
@@ -72,7 +70,7 @@ public class AntivirusJobSchedulerListener extends AbstractEventListener impleme
      */
     protected static final String ANTIVIRUS_API_ID = "com.xwiki.antivirus:application-antivirus-api";
 
-    protected static final LocalDocumentReference JOB_DOC =
+    public static final LocalDocumentReference JOB_DOC =
         new LocalDocumentReference(Collections.singletonList("Antivirus"), "AntivirusJob");
 
     private static final List<Event> EVENTS = Collections.singletonList(new ExtensionInstalledEvent());

@@ -174,7 +174,7 @@
       <unmodifiable>0</unmodifiable>
       <validationMessage/>
       <validationRegExp/>
-      <values>blocked|deleted|deleteFailed</values>
+      <values>blocked|deleted|deleteFailed|scanFailed</values>
       <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
     </incidentAction>
     <incidentContext>
@@ -213,6 +213,20 @@
       <validationRegExp/>
       <classType>com.xpn.xwiki.objects.classes.DateClass</classType>
     </incidentDate>
+    <scanJobId>
+      <customDisplay/>
+      <disabled>0</disabled>
+      <hint/>
+      <name>scanJobId</name>
+      <number>10</number>
+      <numberType>long</numberType>
+      <prettyName>ID used to associate the incident to a Scan Job</prettyName>
+      <size>30</size>
+      <unmodifiable>0</unmodifiable>
+      <validationMessage/>
+      <validationRegExp/>
+      <classType>com.xpn.xwiki.objects.classes.NumberClass</classType>
+    </scanJobId>
   </class>
   <object>
     <name>Antivirus.AntivirusIncidentClass</name>

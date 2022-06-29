@@ -19,59 +19,90 @@
  */
 package com.xwiki.antivirus.internal;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import com.xpn.xwiki.XWiki;
+import com.xpn.xwiki.XWikiContext;
+import com.xpn.xwiki.XWikiException;
+import com.xpn.xwiki.doc.XWikiAttachment;
+import com.xpn.xwiki.doc.XWikiDocument;
+import com.xpn.xwiki.objects.BaseObject;
+import com.xpn.xwiki.plugin.scheduler.AbstractJob;
+import com.xpn.xwiki.web.Utils;
+import com.xwiki.antivirus.*;
+import com.xwiki.licensing.Licensor;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
+import org.quartz.SchedulerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.xwiki.environment.Environment;
 import org.xwiki.model.reference.AttachmentReference;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.DocumentReferenceResolver;
 import org.xwiki.model.reference.WikiReference;
 import org.xwiki.query.Query;
+import org.xwiki.query.QueryException;
 import org.xwiki.query.QueryManager;
 import org.xwiki.wiki.descriptor.WikiDescriptorManager;
 
-import com.xpn.xwiki.XWiki;
-import com.xpn.xwiki.XWikiContext;
-import com.xpn.xwiki.doc.XWikiAttachment;
-import com.xpn.xwiki.doc.XWikiDocument;
-import com.xpn.xwiki.plugin.scheduler.AbstractJob;
-import com.xpn.xwiki.web.Utils;
-import com.xwiki.antivirus.AntivirusConfiguration;
-import com.xwiki.antivirus.AntivirusEngine;
-import com.xwiki.antivirus.AntivirusException;
-import com.xwiki.antivirus.AntivirusLog;
-import com.xwiki.antivirus.AntivirusReportSender;
-import com.xwiki.antivirus.ScanResult;
-import com.xwiki.licensing.Licensor;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 /**
  * Periodically runs an antivirus scan on all attachments in the wiki.
  *
  * @version $Id$
  */
-public class AntivirusJob extends AbstractJob
-{
+public class AntivirusJob extends AbstractJob {
+    private static final String JOB_START_TIME_KEY = "startTime";
+
+    private static final String SCANNED_FILES_NR_KEY = "filesScanned";
+
+    private static final String LAST_DOCUMENT_KEY = "lastDocument";
+
+    public static final String PATH = "/jobs/status/antivirus/";
+
+    public static final String JSON_FILE_NAME = "scan.properties";
+
     private static final Logger LOGGER = LoggerFactory.getLogger(AntivirusJob.class);
 
+    private final Gson gson = new Gson();
+
+    private int filesScanned = 0;
+
     @Override
-    protected void executeJob(JobExecutionContext jobContext) throws JobExecutionException
-    {
+    protected void executeJob(JobExecutionContext jobContext) throws JobExecutionException {
+        try {
+            List<JobExecutionContext> activeAntivirusJobs = jobContext.getScheduler()
+                    .getCurrentlyExecutingJobs()
+                    .stream()
+                    .filter(job -> job.getJobDetail().getKey().getName().matches("[\\w\\d]+:Antivirus\\.AntivirusJob_\\d+"))
+                    .collect(Collectors.toList());
+            if (activeAntivirusJobs.size() > 1 && !activeAntivirusJobs.stream().min(Comparator.comparing(JobExecutionContext::getFireTime)).get().equals(jobContext)) {
+                LOGGER.warn("Stopped Antivirus Job from execution as there was another instance already running!");
+                return;
+            }
+        } catch (SchedulerException e) {
+            throw new RuntimeException(e);
+        }
         XWikiContext context = getXWikiContext();
+
+        String jsonPath = getJsonPath();
+
+        JsonObject scanJson = createJson(jsonPath);
 
         AntivirusConfiguration antivirusConfiguration = Utils.getComponent(AntivirusConfiguration.class);
         if (!antivirusConfiguration.isEnabled()) {
             if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("Scheduled Antirvirus scan is skipped. Antivirus is disabled.");
+                LOGGER.debug("Scheduled Antivirus scan is skipped. Antivirus is disabled.");
             }
             return;
         }
@@ -80,15 +111,15 @@ public class AntivirusJob extends AbstractJob
         Licensor licensor = Utils.getComponent(Licensor.class);
         if (!licensor.hasLicensure(new DocumentReference(context.getMainXWiki(), "Antivirus", "ConfigurationClass"))) {
             LOGGER.warn("Scheduled Antivirus scan is skipped. "
-                + "No valid Antivirus license has been found. Please visit the 'Licenses' section in Administration.");
+                    + "No valid Antivirus license has been found. Please visit the 'Licenses' section in Administration.");
             return;
         }
 
-        Date startDate = new Date();
+        Date startDate = new Date(scanJson.getAsJsonPrimitive(JOB_START_TIME_KEY).getAsLong());
 
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug("Antivirus scheduled scan execution using engine [{}] has started...",
-                antivirusConfiguration.getDefaultEngineName());
+                    antivirusConfiguration.getDefaultEngineName());
         }
 
         // Get the configured antivirus engine.
@@ -97,49 +128,49 @@ public class AntivirusJob extends AbstractJob
             antivirus = Utils.getComponent(AntivirusEngine.class, antivirusConfiguration.getDefaultEngineName());
         } catch (Exception e) {
             LOGGER.error("Failed to load antivirus engine [{}] for scheduled scan.",
-                antivirusConfiguration.getDefaultEngineName(), e);
+                    antivirusConfiguration.getDefaultEngineName(), e);
             return;
         }
 
-        // Note: preserve the addition order so that we have a nice report.
-        Map<XWikiAttachment, Collection<String>> deletedInfectedAttachments = new LinkedHashMap<>();
-        Map<XWikiAttachment, Collection<String>> deleteFailedInfectedAttachments = new LinkedHashMap<>();
-        Map<XWikiAttachment, Exception> scanFailedAttachments = new LinkedHashMap<>();
 
-        Collection<String> wikiIds = null;
+        List<String> wikiIds = null;
         try {
-            wikiIds = Utils.getComponent(WikiDescriptorManager.class).getAllIds();
+            wikiIds = Utils.getComponent(WikiDescriptorManager.class).getAllIds().stream().sorted().collect(Collectors.toList());
         } catch (Exception e) {
             LOGGER.error("Failed to get the list of wikis to scan", e);
             return;
         }
+        AntivirusLog antivirusLog = Utils.getComponent(AntivirusLog.class);
 
-        for (String wikiId : wikiIds) {
-            scanWiki(wikiId, antivirus, deletedInfectedAttachments, deleteFailedInfectedAttachments,
-                scanFailedAttachments);
+        DocumentReferenceResolver<String> resolver = Utils.getComponent(DocumentReferenceResolver.TYPE_STRING);
+        String previousScanWiki = scanJson.get(LAST_DOCUMENT_KEY).getAsString().isEmpty() ?
+                "" : resolver.resolve(scanJson.get(LAST_DOCUMENT_KEY).getAsString()).getWikiReference().getName();
+        int resumeIndex = Math.max(wikiIds.indexOf(previousScanWiki), 0);
+
+        for (int i = resumeIndex; i < wikiIds.size(); i++) {
+            scanWiki(wikiIds.get(i), antivirus, scanJson, jsonPath, antivirusLog, antivirusConfiguration.getDefaultEngineName());
         }
 
         Date endDate = new Date();
 
         // Send the report by email, if needed.
-        maybeSendReport(deletedInfectedAttachments, deleteFailedInfectedAttachments, scanFailedAttachments, startDate,
-            endDate);
+        maybeSendReport(startDate, endDate);
 
-        // Log the incidents in the Antivirus Log.
-        logIncidents(deletedInfectedAttachments, deleteFailedInfectedAttachments,
-            antivirusConfiguration.getDefaultEngineName());
+        try {
+            Files.delete(Paths.get(jsonPath));
+        } catch (IOException e) {
+            LOGGER.warn("Antivirus Job Scan status file at [{}] could not be deleted when Job execution finished",
+                    jsonPath, e);
+        }
 
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug("Antivirus scheduled scan execution using engine [{}] has finished.",
-                antivirusConfiguration.getDefaultEngineName());
+                    antivirusConfiguration.getDefaultEngineName());
         }
     }
 
-    private void scanWiki(String wikiId, AntivirusEngine antivirus,
-        Map<XWikiAttachment, Collection<String>> deletedInfectedAttachments,
-        Map<XWikiAttachment, Collection<String>> deleteFailedInfectedAttachments,
-        Map<XWikiAttachment, Exception> scanFailedAttachments)
-    {
+    private void scanWiki(String wikiId, AntivirusEngine antivirus, JsonObject scanJson, String jsonPath,
+                          AntivirusLog antivirusLog, String engineHint) {
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug("Scanning wiki [{}]...", wikiId);
         }
@@ -149,30 +180,34 @@ public class AntivirusJob extends AbstractJob
         QueryManager queryManager = Utils.getComponent(QueryManager.class);
         try {
             Query query = queryManager
-                .createQuery("SELECT DISTINCT doc.fullName FROM XWikiDocument AS doc, XWikiAttachment AS attachment "
-                    + "WHERE doc.id = attachment.docId ORDER BY doc.fullName", Query.HQL)
-                .setWiki(wikiId);
+                    .createQuery("SELECT DISTINCT doc.fullName FROM XWikiDocument AS doc, XWikiAttachment AS attachment "
+                            + "WHERE doc.id = attachment.docId ORDER BY doc.fullName", Query.HQL)
+                    .setWiki(wikiId);
             docsWithAttachments = query.execute();
         } catch (Exception e) {
             LOGGER.error("Failed to get the list of documents with attachments to scan for wiki [{}]", wikiId, e);
             return;
         }
-
         // Scan the documents and get the results.
         DocumentReferenceResolver<String> resolver = Utils.getComponent(DocumentReferenceResolver.TYPE_STRING);
         WikiReference wikiReference = new WikiReference(wikiId);
-        for (String docFullName : docsWithAttachments) {
-            DocumentReference documentReference = resolver.resolve(docFullName, wikiReference);
-            scanDocument(documentReference, antivirus, deletedInfectedAttachments, deleteFailedInfectedAttachments,
-                scanFailedAttachments);
+        List<DocumentReference> docRefs = docsWithAttachments.stream().map(docName -> resolver.resolve(docName, wikiReference)).collect(Collectors.toList());
+        String previousScanDocument = scanJson.get(LAST_DOCUMENT_KEY).getAsString();
+        OptionalInt indexOpt = IntStream.range(0, docRefs.size())
+                .filter(i -> previousScanDocument.equals(docRefs.get(i).toString()))
+                .findFirst();
+
+        for (int i = indexOpt.orElse(0); i < docsWithAttachments.size(); i++) {
+            DocumentReference documentReference = resolver.resolve(docsWithAttachments.get(i), wikiReference);
+            scanDocument(documentReference, antivirus, scanJson, antivirusLog, engineHint);
+            scanJson.addProperty(LAST_DOCUMENT_KEY, documentReference.toString());
+            scanJson.addProperty(SCANNED_FILES_NR_KEY, filesScanned);
+            persistJson(jsonPath, scanJson);
         }
     }
 
-    private void scanDocument(DocumentReference documentReference, AntivirusEngine antivirus,
-        Map<XWikiAttachment, Collection<String>> deletedInfectedAttachments,
-        Map<XWikiAttachment, Collection<String>> deleteFailedInfectedAttachments,
-        Map<XWikiAttachment, Exception> scanFailedAttachments)
-    {
+    private void scanDocument(DocumentReference documentReference, AntivirusEngine antivirus, JsonObject scanJson,
+                              AntivirusLog antivirusLog, String engineHint) {
         XWikiContext context = getXWikiContext();
         XWiki xwiki = context.getWiki();
 
@@ -187,48 +222,49 @@ public class AntivirusJob extends AbstractJob
             LOGGER.error("Failed to scan attachments of document [{}]", documentReference, e);
             return;
         }
-
-        Map<XWikiAttachment, Collection<String>> deletedAttachmentsForDoc = new HashMap<>();
-
         // Used for logging.
-        Map<String, Collection<String>> loggingData = new HashMap<>();
+        Map<XWikiAttachment, Collection<String>> deletedFilesForDoc = new HashMap<>();
 
         // Use a clone while iterating to avoid ConcurrentModificationExceptions while removing attachments.
         List<XWikiAttachment> attachmentsList = new ArrayList<>(document.getAttachmentList());
 
         for (XWikiAttachment attachment : attachmentsList) {
-            scanAttachment(attachment, antivirus, document, deletedAttachmentsForDoc, loggingData,
-                scanFailedAttachments);
+            scanAttachment(attachment, antivirus, document, deletedFilesForDoc, scanJson, antivirusLog, engineHint);
         }
 
         // Save the changes, if needed.
-        if (deletedAttachmentsForDoc.isEmpty()) {
+        if (deletedFilesForDoc.isEmpty()) {
             return;
         }
 
+        Map<String, Collection<String>> loggingData = deletedFilesForDoc.entrySet()
+                .stream()
+                .collect(Collectors.toMap(e -> e.getKey().getFilename(), Map.Entry::getValue));
         try {
             // Use the (scheduler job's) context user as author.
             document.setAuthorReference(context.getUserReference());
 
             xwiki.saveDocument(document, "[Antivirus Application] Automatically removed infected attachment(s)",
-                context);
-
+                    context);
+            for (Map.Entry<XWikiAttachment, Collection<String>> entry : deletedFilesForDoc.entrySet()) {
+                logIncident(antivirusLog, entry.getKey(), entry.getValue(), "deleted", engineHint);
+            }
             // Log and add to the successful deletions report.
             LOGGER.warn("Deleted infected attachments from document [{}]: [{}]", document.getDocumentReference(),
-                loggingData);
-            deletedInfectedAttachments.putAll(deletedAttachmentsForDoc);
+                    loggingData);
         } catch (Exception e) {
             // Log and add to the failed deletions report.
             LOGGER.error("Failed to delete infected attachments from document [{}]: [{}]",
-                document.getDocumentReference(), loggingData, e);
-            deleteFailedInfectedAttachments.putAll(deletedAttachmentsForDoc);
+                    document.getDocumentReference(), loggingData, e);
+            for (Map.Entry<XWikiAttachment, Collection<String>> entry : deletedFilesForDoc.entrySet()) {
+                logIncident(antivirusLog, entry.getKey(), entry.getValue(), "deleteFailed", engineHint);
+            }
         }
     }
 
     private void scanAttachment(XWikiAttachment attachment, AntivirusEngine antivirus, XWikiDocument document,
-        Map<XWikiAttachment, Collection<String>> deletedAttachmentsForDoc, Map<String, Collection<String>> loggingData,
-        Map<XWikiAttachment, Exception> scanFailedAttachments)
-    {
+                                Map<XWikiAttachment, Collection<String>> deletedAttachmentsForDoc, JsonObject scanJson,
+                                AntivirusLog antivirusLog, String engineHint) {
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug("Scanning attachment [{}]...", attachment.getReference());
         }
@@ -236,6 +272,7 @@ public class AntivirusJob extends AbstractJob
         ScanResult scanResult = null;
         try {
             scanResult = antivirus.scan(attachment);
+            scanJson.addProperty(SCANNED_FILES_NR_KEY, ++filesScanned);
             if (scanResult.isClean()) {
                 return;
             }
@@ -247,12 +284,11 @@ public class AntivirusJob extends AbstractJob
             // create a new exception.
             String rootExceptionMessage = ExceptionUtils.getRootCauseMessage(e);
             if (rootExceptionMessage.equals("IOException: Broken pipe") ||
-                rootExceptionMessage.equals("ScanFailureException: Scan failure: INSTREAM size limit exceeded. ERROR"))
-            {
+                    rootExceptionMessage.equals("ScanFailureException: Scan failure: INSTREAM size limit exceeded. ERROR")) {
                 e = new AntivirusException("File size too large");
             }
             // Add it to the list of failed attachments, to be sent in the report.
-            scanFailedAttachments.put(attachment, e);
+            logIncident(antivirusLog, attachment, Collections.singletonList(ExceptionUtils.getRootCauseMessage(e)), "scanFailed", engineHint);
             // Nothing more to do for this attachment.
             return;
         }
@@ -263,70 +299,120 @@ public class AntivirusJob extends AbstractJob
         // Remember the removed attachments for the current document.
         deletedAttachmentsForDoc.put(attachment, scanResult.getfoundViruses());
 
-        // Extract the relevant logging data.
-        loggingData.put(attachment.getFilename(), scanResult.getfoundViruses());
     }
 
-    private void maybeSendReport(Map<XWikiAttachment, Collection<String>> deletedInfectedAttachments,
-        Map<XWikiAttachment, Collection<String>> deleteFailedInfectedAttachments,
-        Map<XWikiAttachment, Exception> scanFailedAttachments, Date startDate, Date endDate)
-    {
+    private void maybeSendReport(Date startDate, Date endDate) {
         AntivirusConfiguration antivirusConfiguration = Utils.getComponent(AntivirusConfiguration.class);
 
+        QueryManager queryManager = Utils.getComponent(QueryManager.class);
+        boolean existScanIncidents;
+        try {
+            existScanIncidents = !queryManager
+                    .createQuery("where doc.object(Antivirus.AntivirusIncidentClass).scanJobId > :docId", Query.XWQL)
+                    .setWiki(getXWikiContext().getMainXWiki())
+                    .bindValue("docId", startDate.getTime())
+                    .setLimit(1)
+                    .execute().isEmpty();
+        } catch (QueryException e) {
+            LOGGER.error("Failed to query for the incidents created during the scan.", e);
+            return;
+        }
         // Skip sending the report only when no infected attachments are found and report sending is not forced.
-        if (!antivirusConfiguration.shouldAlwaysSendReport() && deletedInfectedAttachments.isEmpty()
-            && deleteFailedInfectedAttachments.isEmpty())
-        {
+        if (!antivirusConfiguration.shouldAlwaysSendReport() && existScanIncidents) {
             LOGGER.debug("No-infections scheduled scan report sending is skipped. 'Alway Send Report' is disabled.");
             return;
         }
 
         try {
             AntivirusReportSender reportSender = Utils.getComponent(AntivirusReportSender.class);
-            reportSender.sendReport(deletedInfectedAttachments, deleteFailedInfectedAttachments, scanFailedAttachments,
-                startDate, endDate);
+            reportSender.sendReport(startDate, endDate);
         } catch (Exception e) {
             // XWikiAttachment.toString() is not very useful when logging, so we need something better.
-            Map<AttachmentReference, Collection<String>> failed =
-                getLoggingFriendlyMap(deleteFailedInfectedAttachments);
-            Map<AttachmentReference, Collection<String>> deleted = getLoggingFriendlyMap(deletedInfectedAttachments);
-            LOGGER.error(
-                "Failed to send the infection report. Logging the report instead...\n"
-                    + "Delete failed for infected attachments: [{}]\n" + "Deleted infected attachments: [{}]\n"
-                    + "Scan failed attachments: [{}]\n" + "Start date: [{}]\n" + "End date: [{}]",
-                failed, deleted, scanFailedAttachments, startDate, endDate);
-        }
-    }
-
-    private Map<AttachmentReference, Collection<String>> getLoggingFriendlyMap(
-        Map<XWikiAttachment, Collection<String>> xwikiAttachmentMap)
-    {
-        Map<AttachmentReference, Collection<String>> attachmentReferenceMap = new LinkedHashMap<>();
-        for (Map.Entry<XWikiAttachment, Collection<String>> entry : xwikiAttachmentMap.entrySet()) {
-            attachmentReferenceMap.put(entry.getKey().getReference(), entry.getValue());
-        }
-
-        return attachmentReferenceMap;
-    }
-
-    private void logIncidents(Map<XWikiAttachment, Collection<String>> deletedInfectedAttachments,
-        Map<XWikiAttachment, Collection<String>> deleteFailedInfectedAttachments, String engineHint)
-    {
-        AntivirusLog antivirusLog = Utils.getComponent(AntivirusLog.class);
-
-        logIncidents(antivirusLog, deletedInfectedAttachments, "deleted", engineHint);
-        logIncidents(antivirusLog, deleteFailedInfectedAttachments, "deleteFailed", engineHint);
-    }
-
-    private void logIncidents(AntivirusLog antivirusLog, Map<XWikiAttachment, Collection<String>> infectedAttachments,
-        String action, String engineHint)
-    {
-        for (Map.Entry<XWikiAttachment, Collection<String>> entry : infectedAttachments.entrySet()) {
             try {
-                antivirusLog.log(entry.getKey(), entry.getValue(), action, "scheduledScan", engineHint);
-            } catch (AntivirusException e) {
-                LOGGER.error("Failed to log scheduled scan incident", e);
+                Map<String, Map<AttachmentReference, Collection<String>>> incidents = getIncidents(startDate);
+                LOGGER.error(
+                        "Failed to send the infection report. Logging the report instead...\n"
+                                + "Delete failed for infected attachments: [{}]\n" + "Deleted infected attachments: [{}]\n"
+                                + "Scan failed attachments: [{}]\n" + "Start date: [{}]\n" + "End date: [{}]",
+                        incidents.get("deleteFailed"), incidents.get("deleted"), incidents.get("scanFailed"), startDate, endDate);
+            } catch (QueryException | XWikiException ex) {
+                LOGGER.error(
+                        "Failed to send the infection report. Failed to log the incidents.", e);
             }
+
+        }
+    }
+
+
+    private JsonObject createJson(String path) {
+        try {
+            List<String> jsonFileContent = Files.readAllLines(Paths.get(path));
+            JsonObject scanJson = gson.fromJson(String.join("", jsonFileContent), JsonObject.class);
+            filesScanned = scanJson.getAsJsonPrimitive(SCANNED_FILES_NR_KEY).getAsInt();
+            return scanJson;
+
+        } catch (IOException e) {
+            JsonObject scanJson = new JsonObject();
+            scanJson.addProperty(JOB_START_TIME_KEY, System.currentTimeMillis());
+            scanJson.addProperty(SCANNED_FILES_NR_KEY, 0);
+            scanJson.addProperty(LAST_DOCUMENT_KEY, "");
+
+            persistJson(path, scanJson);
+
+            return scanJson;
+        }
+
+
+    }
+
+    private String getJsonPath() {
+        String jsonPath = Utils.getComponent(Environment.class).getPermanentDirectory().getAbsolutePath() + PATH;
+        try {
+            Files.createDirectories(Paths.get(jsonPath));
+        } catch (IOException e) {
+            LOGGER.warn("Could not create the path [{}] for the persisted status of the scan.", jsonPath, e);
+        }
+        jsonPath += JSON_FILE_NAME;
+        return jsonPath;
+    }
+
+    private void persistJson(String jsonPath, JsonObject scanData) {
+        try (PrintWriter out = new PrintWriter(new FileWriter(jsonPath))) {
+            out.write(scanData.toString());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private Map<String, Map<AttachmentReference, Collection<String>>> getIncidents(Date startDate) throws XWikiException, QueryException {
+        XWikiContext context = getXWikiContext();
+        QueryManager queryManager = Utils.getComponent(QueryManager.class);
+        DocumentReferenceResolver<String> resolver = Utils.getComponent(DocumentReferenceResolver.TYPE_STRING);
+        List<String> incidentDocNames = queryManager
+                .createQuery("where doc.object(Antivirus.AntivirusIncidentClass).scanJobId > :docId", Query.XWQL)
+                .setWiki(context.getMainXWiki())
+                .bindValue("docId", startDate.getTime())
+                .execute();
+
+        Map<String, Map<AttachmentReference, Collection<String>>> incidents = new HashMap<>();
+        for (String incidentDocName : incidentDocNames) {
+            DocumentReference reference = resolver.resolve(incidentDocName, context.getMainXWiki());
+            XWikiDocument doc = context.getWiki().getDocument(reference, context);
+            BaseObject incidentObj = doc.getXObject(DefaultAntivirusLog.INCIDENT_CLASS_REFERENCE);
+            DocumentReference docRef = resolver.resolve(incidentObj.getStringValue("attachmentDocument"));
+            AttachmentReference attachmentRef = new AttachmentReference(incidentObj.getStringValue("attachmentName"), docRef);
+            incidents.getOrDefault(incidentObj.getStringValue("incidentAction"), new HashMap<>())
+                    .put(attachmentRef, incidentObj.getListValue("attachmentInfections"));
+
+        }
+        return incidents;
+    }
+
+    private void logIncident(AntivirusLog antivirusLog, XWikiAttachment attachment, Collection<String> infections, String action, String engineHint) {
+        try {
+            antivirusLog.log(attachment, infections, action, "scheduledScan", engineHint);
+        } catch (AntivirusException e) {
+            LOGGER.error("Failed to log scheduled scan incident", e);
         }
     }
 }
