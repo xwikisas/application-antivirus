@@ -118,7 +118,8 @@ public class AntivirusJobSchedulerListener extends AbstractEventListener impleme
         }
     }
 
-    @Override public void onEvent(Event event, Object source, Object data)
+    @Override
+    public void onEvent(Event event, Object source, Object data)
     {
         String extensionId = ((DefaultInstalledExtension) source).getId().getId();
 

@@ -26,6 +26,7 @@ import com.xpn.xwiki.doc.XWikiAttachment;
 import com.xpn.xwiki.doc.XWikiDocument;
 import com.xwiki.antivirus.*;
 import com.xwiki.licensing.Licensor;
+
 import org.slf4j.Logger;
 import org.xwiki.bridge.event.DocumentCreatingEvent;
 import org.xwiki.bridge.event.DocumentUpdatingEvent;
@@ -43,6 +44,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Provider;
 import javax.inject.Singleton;
+
 import java.util.*;
 
 /**
@@ -54,7 +56,8 @@ import java.util.*;
 @Component
 @Named("com.xwiki.antivirus.internal.AttachmentUploadedEventListener")
 @Singleton
-public class AttachmentUploadedEventListener extends AbstractEventListener {
+public class AttachmentUploadedEventListener extends AbstractEventListener
+{
     @Inject
     private ComponentManager componentManager;
 
@@ -77,13 +80,15 @@ public class AttachmentUploadedEventListener extends AbstractEventListener {
     /**
      * Default constructor.
      */
-    public AttachmentUploadedEventListener() {
+    public AttachmentUploadedEventListener()
+    {
         super(AttachmentUploadedEventListener.class.getName(),
-                Arrays.asList(new DocumentUpdatingEvent(), new DocumentCreatingEvent()));
+            Arrays.asList(new DocumentUpdatingEvent(), new DocumentCreatingEvent()));
     }
 
     @Override
-    public void onEvent(Event event, Object source, Object data) {
+    public void onEvent(Event event, Object source, Object data)
+    {
         XWikiDocument doc = (XWikiDocument) source;
         XWikiContext context = (XWikiContext) data;
 
@@ -91,8 +96,8 @@ public class AttachmentUploadedEventListener extends AbstractEventListener {
         if (!antivirusConfiguration.isEnabled()) {
             if (logger.isDebugEnabled()) {
                 logger.debug(
-                        "Skipping attachment scan for event [{}] by user [{}] on document [{}]. Antivirus is disabled.",
-                        event.getClass().getName(), context.getUserReference(), doc.getDocumentReference());
+                    "Skipping attachment scan for event [{}] by user [{}] on document [{}]. Antivirus is disabled.",
+                    event.getClass().getName(), context.getUserReference(), doc.getDocumentReference());
             }
             return;
         }
@@ -113,10 +118,11 @@ public class AttachmentUploadedEventListener extends AbstractEventListener {
 
         // Skip if the license has expired.
         if (!licensorProvider.get()
-                .hasLicensure(new DocumentReference(context.getMainXWiki(), "Antivirus", "ConfigurationClass"))) {
+            .hasLicensure(new DocumentReference(context.getMainXWiki(), "Antivirus", "ConfigurationClass")))
+        {
             logger.warn("Skipping attachment scan for event [{}] by user [{}] on document [{}]. "
-                            + "No valid Antivirus license has been found. Please visit the 'Licenses' section in Administration.",
-                    event.getClass().getName(), context.getUserReference(), safeDoc.getDocumentReference());
+                    + "No valid Antivirus license has been found. Please visit the 'Licenses' section in Administration.",
+                event.getClass().getName(), context.getUserReference(), safeDoc.getDocumentReference());
             return;
         }
 
@@ -124,28 +130,29 @@ public class AttachmentUploadedEventListener extends AbstractEventListener {
         AntivirusEngine antivirus = null;
         try {
             antivirus =
-                    componentManager.getInstance(AntivirusEngine.class, antivirusConfiguration.getDefaultEngineName());
+                componentManager.getInstance(AntivirusEngine.class, antivirusConfiguration.getDefaultEngineName());
         } catch (ComponentLookupException e) {
             logger.error(
-                    "Failed to load antivirus engine [{}] to scan attachments for event [{}] by user [{}] on document [{}]",
-                    antivirusConfiguration.getDefaultEngineName(), event.getClass().getName(), context.getUserReference(),
-                    safeDoc.getDocumentReference(), e);
+                "Failed to load antivirus engine [{}] to scan attachments for event [{}] by user [{}] on document [{}]",
+                antivirusConfiguration.getDefaultEngineName(), event.getClass().getName(), context.getUserReference(),
+                safeDoc.getDocumentReference(), e);
             return;
         }
 
         Map<AttachmentReference, Collection<String>> infectedAttachments =
-                scan(event, context, antivirus, attachmentsToScan);
+            scan(event, context, antivirus, attachmentsToScan);
 
         // Cancel the event if we have detected any infections.
         if (infectedAttachments.size() > 0) {
             ((CancelableEvent) event)
-                    .cancel(String.format("Virus or malware infections found for attachments [%s] uploaded by user [%s]",
-                            infectedAttachments, context.getUserReference()));
+                .cancel(String.format("Virus or malware infections found for attachments [%s] uploaded by user [%s]",
+                    infectedAttachments, context.getUserReference()));
         }
     }
 
     private Map<AttachmentReference, Collection<String>> scan(Event event, XWikiContext context,
-                                                              AntivirusEngine antivirus, List<XWikiAttachment> attachmentsToScan) {
+        AntivirusEngine antivirus, List<XWikiAttachment> attachmentsToScan)
+    {
         // Scan each attachment and build the list of infections.
         Map<AttachmentReference, Collection<String>> infectedAttachments = new HashMap<>();
         for (XWikiAttachment attachment : attachmentsToScan) {
@@ -155,9 +162,9 @@ public class AttachmentUploadedEventListener extends AbstractEventListener {
                 int maxFileSize = antivirusConfiguration.getMaxFileSize();
                 if (attachmentSize > maxFileSize * 1_000_000L) {
                     logger.warn(
-                            "Attachment [{}] is larger than [{}MB] and will be skipped during event [{}] by user [{}]."
-                                    + " The file will be scanned during the scheduled scan.",
-                            attachment.getReference(), maxFileSize, event.getClass().getName(), context.getUserReference());
+                        "Attachment [{}] is larger than [{}MB] and will be skipped during event [{}] by user [{}]."
+                            + " The file will be scanned during the scheduled scan.",
+                        attachment.getReference(), maxFileSize, event.getClass().getName(), context.getUserReference());
                     continue;
                 }
                 ScanResult scanResult = antivirus.scan(attachment);
@@ -168,21 +175,22 @@ public class AttachmentUploadedEventListener extends AbstractEventListener {
                 // Infection found.
                 infectedAttachments.put(attachment.getReference(), scanResult.getfoundViruses());
                 logger.warn("Attachment [{}] found infected with [{}] during event [{}] by user [{}]",
-                        attachment.getReference(), scanResult.getfoundViruses(), event.getClass().getName(),
-                        context.getUserReference());
+                    attachment.getReference(), scanResult.getfoundViruses(), event.getClass().getName(),
+                    context.getUserReference());
 
                 // Save the incident in the log.
                 antivirusLog.log(attachment, scanResult.getfoundViruses(), "blocked", "upload",
-                        antivirusConfiguration.getDefaultEngineName());
+                    antivirusConfiguration.getDefaultEngineName());
             } catch (AntivirusException | XWikiException e) {
                 logger.error("Failed to scan attachment [{}] during event [{}] by user [{}]", attachment.getReference(),
-                        event.getClass().getName(), context.getUserReference(), e);
+                    event.getClass().getName(), context.getUserReference(), e);
             }
         }
         return infectedAttachments;
     }
 
-    private List<XWikiAttachment> getAttachmentsToScan(Event event, XWikiDocument doc, XWikiContext context) {
+    private List<XWikiAttachment> getAttachmentsToScan(Event event, XWikiDocument doc, XWikiContext context)
+    {
         List<XWikiAttachment> attachmentsToScan = new ArrayList<>();
 
         if (event instanceof DocumentUpdatingEvent) {
