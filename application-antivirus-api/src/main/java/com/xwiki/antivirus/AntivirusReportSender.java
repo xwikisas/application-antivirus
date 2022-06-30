@@ -34,7 +34,8 @@ public interface AntivirusReportSender
     /**
      * @param startDate when the scheduled scan started
      * @param endDate when the scheduled scan ended
+     * @param filesScanned total number of attachments that have been scanned during the scheduled scan
      * @throws Exception in case of problems
      */
-    void sendReport(Date startDate, Date endDate) throws Exception;
+    void sendReport(Date startDate, Date endDate, int filesScanned) throws Exception;
 }

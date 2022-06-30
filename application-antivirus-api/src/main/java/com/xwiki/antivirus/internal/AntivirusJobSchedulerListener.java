@@ -55,7 +55,7 @@ import com.xpn.xwiki.plugin.scheduler.SchedulerPlugin;
  * where is fixed.
  *
  * @version $Id$
- * @since 1.4.3
+ * @since 1.5
  */
 @Component
 @Named(AntivirusJobSchedulerListener.ROLE_HINT)

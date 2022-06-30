@@ -19,6 +19,21 @@
  */
 package com.xwiki.antivirus.internal;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
+
+import javax.inject.Inject;
+import javax.inject.Provider;
+import javax.inject.Singleton;
+
+import org.apache.commons.lang3.RandomStringUtils;
+import org.xwiki.component.annotation.Component;
+import org.xwiki.model.reference.DocumentReference;
+import org.xwiki.model.reference.EntityReferenceSerializer;
+import org.xwiki.model.reference.LocalDocumentReference;
+import org.xwiki.security.authorization.AuthorizationManager;
+
 import com.xpn.xwiki.XWiki;
 import com.xpn.xwiki.XWikiContext;
 import com.xpn.xwiki.XWikiException;
@@ -27,19 +42,6 @@ import com.xpn.xwiki.doc.XWikiDocument;
 import com.xpn.xwiki.objects.BaseObject;
 import com.xwiki.antivirus.AntivirusException;
 import com.xwiki.antivirus.AntivirusLog;
-import org.apache.commons.lang3.RandomStringUtils;
-import org.xwiki.component.annotation.Component;
-import org.xwiki.model.reference.DocumentReference;
-import org.xwiki.model.reference.EntityReferenceSerializer;
-import org.xwiki.model.reference.LocalDocumentReference;
-import org.xwiki.security.authorization.AuthorizationManager;
-
-import javax.inject.Inject;
-import javax.inject.Provider;
-import javax.inject.Singleton;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
 
 /**
  * Default implementation for {@link AntivirusLog}, saving incidents in their own pages under a common space.

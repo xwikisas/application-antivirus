@@ -19,11 +19,16 @@
  */
 package com.xwiki.antivirus.internal;
 
-import com.xpn.xwiki.XWikiContext;
-import com.xpn.xwiki.XWikiException;
-import com.xpn.xwiki.doc.XWikiDocument;
-import com.xpn.xwiki.objects.BaseObject;
-import com.xpn.xwiki.plugin.scheduler.SchedulerPlugin;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.Collections;
+import java.util.List;
+
+import javax.inject.Inject;
+import javax.inject.Named;
+import javax.inject.Provider;
+import javax.inject.Singleton;
+
 import org.slf4j.Logger;
 import org.xwiki.bridge.event.ApplicationReadyEvent;
 import org.xwiki.component.annotation.Component;
@@ -31,27 +36,23 @@ import org.xwiki.environment.Environment;
 import org.xwiki.observation.AbstractEventListener;
 import org.xwiki.observation.event.Event;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Provider;
-import javax.inject.Singleton;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.Collections;
-import java.util.List;
-
+import com.xpn.xwiki.XWikiContext;
+import com.xpn.xwiki.XWikiException;
+import com.xpn.xwiki.doc.XWikiDocument;
+import com.xpn.xwiki.objects.BaseObject;
+import com.xpn.xwiki.plugin.scheduler.SchedulerPlugin;
 
 /**
- * Detects if an antivirus scan job was interrupted ar wiki server restart and resumes it.
+ * Detects if an antivirus scan job was interrupted at wiki server restart and resumes it.
  *
  * @version $Id$
- * @since 1.4.3
+ * @since 1.5
  */
 @Component
 @Named(AntivirusScanResumeListener.ROLE_HINT)
 @Singleton
-public class AntivirusScanResumeListener extends AbstractEventListener {
-
+public class AntivirusScanResumeListener extends AbstractEventListener
+{
     private static final List<Event> EVENTS = Collections.singletonList(new ApplicationReadyEvent());
 
     public static final String ROLE_HINT = "AntivirusScanResumeListener";
@@ -65,26 +66,30 @@ public class AntivirusScanResumeListener extends AbstractEventListener {
     @Inject
     private Logger logger;
 
-    public AntivirusScanResumeListener() {
+    public AntivirusScanResumeListener()
+    {
         super(ROLE_HINT, EVENTS);
     }
 
     @Override
-    public void onEvent(Event event, Object source, Object data) {
-        if (Files.exists(Paths.get(environment.getPermanentDirectory() + AntivirusJob.PATH + AntivirusJob.JSON_FILE_NAME))) {
+    public void onEvent(Event event, Object source, Object data)
+    {
+        if (Files.exists(
+            Paths.get(environment.getPermanentDirectory() + AntivirusJob.PATH + AntivirusJob.JSON_FILE_NAME)))
+        {
+            logger.debug("Resuming interrupted Antivirus Job.");
             try {
                 XWikiContext xcontext = contextProvider.get();
 
-                SchedulerPlugin scheduler = (SchedulerPlugin) xcontext.getWiki().getPluginManager().getPlugin("scheduler");
+                SchedulerPlugin scheduler =
+                    (SchedulerPlugin) xcontext.getWiki().getPluginManager().getPlugin("scheduler");
                 XWikiDocument jobDoc = xcontext.getWiki().getDocument(AntivirusJobSchedulerListener.JOB_DOC, xcontext);
                 BaseObject job = jobDoc.getXObject(SchedulerPlugin.XWIKI_JOB_CLASSREFERENCE);
 
                 scheduler.triggerJob(job, xcontext);
-
             } catch (XWikiException e) {
                 logger.error("Failed to resume Antivirus Job after detecting interruption at wiki server restart", e);
             }
-
         }
     }
 }
