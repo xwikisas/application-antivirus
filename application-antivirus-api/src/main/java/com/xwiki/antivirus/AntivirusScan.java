@@ -30,7 +30,9 @@ import java.util.Date;
 public class AntivirusScan
 {
     private final Date startDate;
+
     private final Date endData;
+
     private final int scannedFiles;
 
     public AntivirusScan(Date startDate, Date endData, int scannedFiles)
@@ -63,5 +65,4 @@ public class AntivirusScan
     {
         return scannedFiles;
     }
-
 }

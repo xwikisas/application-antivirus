@@ -21,8 +21,6 @@ package com.xwiki.antivirus;
 
 import org.xwiki.component.annotation.Role;
 
-import java.util.Date;
-
 /**
  * Sends the result of an antivirus scheduled scan as a report to the wiki admins.
  *
