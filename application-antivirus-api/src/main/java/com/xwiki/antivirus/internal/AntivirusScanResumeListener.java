@@ -75,7 +75,7 @@ public class AntivirusScanResumeListener extends AbstractEventListener
     public void onEvent(Event event, Object source, Object data)
     {
         if (Files.exists(
-            Paths.get(environment.getPermanentDirectory() + AntivirusJob.PATH + AntivirusJob.JSON_FILE_NAME)))
+            Paths.get(environment.getPermanentDirectory() + AntivirusJob.JOB_STATUS_FILE_PATH)))
         {
             logger.debug("Resuming interrupted Antivirus Job.");
             try {

@@ -22,6 +22,9 @@ package com.xwiki.antivirus.internal;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
@@ -30,8 +33,12 @@ import javax.inject.Singleton;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.model.reference.DocumentReference;
+import org.xwiki.model.reference.DocumentReferenceResolver;
 import org.xwiki.model.reference.EntityReferenceSerializer;
 import org.xwiki.model.reference.LocalDocumentReference;
+import org.xwiki.query.Query;
+import org.xwiki.query.QueryException;
+import org.xwiki.query.QueryManager;
 import org.xwiki.security.authorization.AuthorizationManager;
 
 import com.xpn.xwiki.XWiki;
@@ -61,6 +68,12 @@ public class DefaultAntivirusLog implements AntivirusLog
     @Inject
     private EntityReferenceSerializer<String> serializer;
 
+    @Inject
+    private QueryManager queryManager;
+
+    @Inject
+    private DocumentReferenceResolver<String> resolver;
+
     @Override
     public void log(XWikiAttachment attachment, Collection<String> infections, String action, String detectionContext,
         String engineHint) throws AntivirusException
@@ -82,7 +95,6 @@ public class DefaultAntivirusLog implements AntivirusLog
             object.set("attachmentDate", attachment.getDate(), context);
             object.set("attachmentAuthor", serializer.serialize(attachment.getAuthorReference()), context);
             object.set("engine", engineHint, context);
-            object.set("scanJobId", System.currentTimeMillis(), context);
 
             xwiki.saveDocument(document, context);
         } catch (Exception e) {
@@ -91,6 +103,33 @@ public class DefaultAntivirusLog implements AntivirusLog
                     attachment.getDoc().getDocumentReference(), infections, detectionContext, action),
                 e);
         }
+    }
+
+    @Override
+    public Map<String, Map<XWikiAttachment, Collection<String>>> getIncidents(Date date)
+        throws QueryException, XWikiException
+    {
+        // All the incidents are saved only on the main wiki, as the application can only be installed on the main wiki.
+        XWikiContext context = contextProvider.get();
+        List<String> incidentDocNames = queryManager
+            .createQuery("where doc.object(Antivirus.AntivirusIncidentClass).incidentDate > :scanStartDate", Query.XWQL)
+            .setWiki(context.getMainXWiki())
+            .bindValue("scanStartDate", date)
+            .execute();
+
+        Map<String, Map<XWikiAttachment, Collection<String>>> incidents = new HashMap<>();
+        for (String incidentDocName : incidentDocNames) {
+            DocumentReference reference = resolver.resolve(incidentDocName, context.getMainXWiki());
+            XWikiDocument doc = context.getWiki().getDocument(reference, context);
+            BaseObject incidentObj = doc.getXObject(INCIDENT_CLASS_REFERENCE);
+            DocumentReference docRef = resolver.resolve(incidentObj.getStringValue("attachmentDocument"));
+            XWikiDocument document = context.getWiki().getDocument(docRef, context);
+            XWikiAttachment attachment = new XWikiAttachment(document, incidentObj.getStringValue("attachmentName"));
+            String incidentAction = incidentObj.getStringValue("incidentAction");
+            incidents.putIfAbsent(incidentAction, new HashMap<>());
+            incidents.get(incidentAction).put(attachment, incidentObj.getListValue("attachmentInfections"));
+        }
+        return incidents;
     }
 
     private XWikiDocument generateDocument(XWikiContext context, XWiki xwiki) throws XWikiException
