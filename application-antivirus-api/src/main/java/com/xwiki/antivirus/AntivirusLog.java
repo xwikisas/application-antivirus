@@ -24,6 +24,7 @@ import com.xpn.xwiki.doc.XWikiAttachment;
 
 import org.xwiki.component.annotation.Role;
 import org.xwiki.query.QueryException;
+import org.xwiki.stability.Unstable;
 
 import java.util.Collection;
 import java.util.Date;
@@ -57,6 +58,8 @@ public interface AntivirusLog
      * @param date the date representing the lower bound of the incidents
      * @return the incidents that took place after the specified date, grouped by the incident action (e.g. "blocked",
      *     "deleted", "deleteFailed", "scanFailed")
+     * @since 1.5
      */
+    @Unstable
     Map<String, Map<XWikiAttachment, Collection<String>>> getIncidents(Date date) throws QueryException, XWikiException;
 }

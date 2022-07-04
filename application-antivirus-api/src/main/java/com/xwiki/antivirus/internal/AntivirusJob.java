@@ -73,7 +73,6 @@ import com.xwiki.licensing.Licensor;
  *
  * @version $Id$
  */
-@SuppressWarnings("ALL")
 public class AntivirusJob extends AbstractJob
 {
     private static final String JOB_START_TIME_KEY = "startTime";
@@ -116,9 +115,9 @@ public class AntivirusJob extends AbstractJob
         }
         XWikiContext context = getXWikiContext();
 
-        // Create a json to store information about the progress of this Job. If the file already exists in the file
-        // system, this means that a previous Job didn't finish properly and the current job will resume the scan
-        // rather than start from scratch.
+        // Create a properties file to store information about the progress of this Job. If the file already exists
+        // in the file system, this means that a previous Job didn't finish properly and the current job will resume
+        // the scan rather than start from scratch.
         String propertiesFilePath = getPropertiesFilesPath();
         Properties scanProperties = getOrCreatePropertiesFile(propertiesFilePath);
 
@@ -166,12 +165,13 @@ public class AntivirusJob extends AbstractJob
         AntivirusLog antivirusLog = Utils.getComponent(AntivirusLog.class);
 
         // Resume the scan from the subwiki where the last scanned Document resided. The subwiki is inferred from the
-        // document reference stored in the json.
+        // document reference stored in the properties file.
         int resumeIndex = 0;
         if (shouldResume) {
             AttachmentReference lastAttScannedRef = getLastAttachmentScannedReference(scanProperties);
             String previousScanWiki = lastAttScannedRef.getDocumentReference().getWikiReference().getName();
-            resumeIndex = indexOf(previousScanWiki, wikiIds);
+            resumeIndex = Collections.binarySearch(wikiIds, previousScanWiki);
+            shouldResume = resumeIndex >= 0;
         }
 
         for (int i = resumeIndex < 0 ? -resumeIndex - 1 : resumeIndex; i < wikiIds.size(); i++) {
@@ -184,7 +184,7 @@ public class AntivirusJob extends AbstractJob
         // Send the report by email, if needed.
         maybeSendReport(startDate, endDate, antivirusLog);
 
-        // Delete the json, indicating that the scan finished successfully.
+        // Delete the properties file, indicating that the scan finished successfully.
         try {
             Files.delete(Paths.get(propertiesFilePath));
         } catch (IOException e) {
@@ -229,7 +229,8 @@ public class AntivirusJob extends AbstractJob
         int resumeIndex = 0;
         if (shouldResume) {
             AttachmentReference lastAttScannedRef = getLastAttachmentScannedReference(scanProperties);
-            resumeIndex = indexOf(lastAttScannedRef.getDocumentReference(), docRefs);
+            resumeIndex = Collections.binarySearch(docRefs, lastAttScannedRef.getDocumentReference());
+            shouldResume = resumeIndex >= 0;
         }
         for (int i = resumeIndex < 0 ? -resumeIndex - 1 : resumeIndex; i < docRefs.size(); i++) {
             // After every scanned Document, persist its reference and the total number of scanned files, until that
@@ -249,7 +250,8 @@ public class AntivirusJob extends AbstractJob
     }
 
     private void scanDocument(DocumentReference documentReference, AntivirusEngine antivirus, Properties scanProperties,
-        AntivirusLog antivirusLog, String engineHint, EntityReferenceSerializer serializer, String propertiesPath)
+        AntivirusLog antivirusLog, String engineHint, EntityReferenceSerializer<String> serializer,
+        String propertiesPath)
     {
         XWikiContext context = getXWikiContext();
         XWiki xwiki = context.getWiki();
@@ -269,12 +271,13 @@ public class AntivirusJob extends AbstractJob
         // Use a clone while iterating to avoid ConcurrentModificationExceptions while removing attachments.
         List<XWikiAttachment> attachmentsList =
             new ArrayList<>(document.getAttachmentList()).stream()
-                .sorted((a1, a2) -> a1.getReference().compareTo(a2.getReference())).collect(Collectors.toList());
+                .sorted(Comparator.comparing(XWikiAttachment::getFilename)).collect(Collectors.toList());
         int resumeIndex = 0;
         if (shouldResume) {
             AttachmentReference lastAttScannedRef = getLastAttachmentScannedReference(scanProperties);
-            resumeIndex = indexOf(lastAttScannedRef,
-                attachmentsList.stream().map(att -> att.getReference()).collect(Collectors.toList()));
+            resumeIndex = Collections.binarySearch(
+                attachmentsList.stream().map(XWikiAttachment::getReference).collect(Collectors.toList()),
+                lastAttScannedRef);
             resumeIndex = resumeIndex >= 0 ? resumeIndex + 1 : -resumeIndex - 1;
             shouldResume = false;
         }
@@ -352,21 +355,15 @@ public class AntivirusJob extends AbstractJob
 
         QueryManager queryManager = Utils.getComponent(QueryManager.class);
         // Check if there are any incidents after the current scan.
-        boolean existScanIncidents;
+        Map<String, Map<AttachmentReference, Collection<String>>> incidents;
         try {
-            existScanIncidents = !queryManager
-                .createQuery("where doc.object(Antivirus.AntivirusIncidentClass).incidentDate > :scanStartDate",
-                    Query.XWQL)
-                .setWiki(getXWikiContext().getMainXWiki())
-                .bindValue("scanStartDate", startDate)
-                .setLimit(1)
-                .execute().isEmpty();
-        } catch (QueryException e) {
+            incidents = getIncidents(startDate, antivirusLog);
+        } catch (XWikiException | QueryException e) {
             LOGGER.error("Failed to query for the incidents created during the scan.", e);
             return;
         }
         // Skip sending the report only when no infected attachments are found and report sending is not forced.
-        if (!antivirusConfiguration.shouldAlwaysSendReport() && existScanIncidents) {
+        if (!antivirusConfiguration.shouldAlwaysSendReport() && !incidents.isEmpty()) {
             LOGGER.debug("No-infections scheduled scan report sending is skipped. 'Always Send Report' is disabled.");
             return;
         }
@@ -375,30 +372,14 @@ public class AntivirusJob extends AbstractJob
             AntivirusReportSender reportSender = Utils.getComponent(AntivirusReportSender.class);
             reportSender.sendReport(new AntivirusScan(startDate, endDate, filesScanned));
         } catch (Exception e) {
-            try {
-                // The report has failed to be sent. Log the incidents instead.
-                Map<String, Map<AttachmentReference, Collection<String>>> incidents =
-                    getIncidents(startDate, antivirusLog);
-                LOGGER.error(
-                    "Failed to send the infection report. Logging the report instead...\n"
-                        + "Delete failed for infected attachments: [{}]\n" + "Deleted infected attachments: [{}]\n"
-                        + "Scan failed attachments: [{}]\n" + "Start date: [{}]\n" + "End date: [{}]",
-                    incidents.get("deleteFailed"), incidents.get("deleted"), incidents.get("scanFailed"), startDate,
-                    endDate, e);
-            } catch (QueryException | XWikiException ex) {
-                LOGGER.error(
-                    "Failed to send the infection report. Failed to log the incidents.", ex);
-            }
+            // The report has failed to be sent. Log the incidents instead.
+            LOGGER.error(
+                "Failed to send the infection report. Logging the report instead...\n"
+                    + "Delete failed for infected attachments: [{}]\n" + "Deleted infected attachments: [{}]\n"
+                    + "Scan failed attachments: [{}]\n" + "Start date: [{}]\n" + "End date: [{}]",
+                incidents.get("deleteFailed"), incidents.get("deleted"), incidents.get("scanFailed"), startDate,
+                endDate, e);
         }
-    }
-
-    private <T extends Comparable<? super T>> int indexOf(T object, List<T> objects)
-    {
-        int index = Collections.binarySearch(objects, object);
-        if (index < 0) {
-            shouldResume = false;
-        }
-        return index;
     }
 
     private Properties getOrCreatePropertiesFile(String path)

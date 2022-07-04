@@ -21,12 +21,15 @@ package com.xwiki.antivirus;
 
 import java.util.Date;
 
+import org.xwiki.stability.Unstable;
+
 /**
  * The result of an Antivirus Job scan.
  *
  * @version $Id$
  * @since 1.5
  */
+@Unstable
 public class AntivirusScan
 {
     private final Date startDate;
