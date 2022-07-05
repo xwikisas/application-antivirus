@@ -19,19 +19,53 @@
  */
 package com.xwiki.antivirus;
 
-import org.xwiki.component.annotation.Role;
+import java.util.Date;
+
+import org.xwiki.stability.Unstable;
 
 /**
- * Sends the result of an antivirus scheduled scan as a report to the wiki admins.
+ * The result of an Antivirus Job scan.
  *
  * @version $Id$
+ * @since 1.5
  */
-@Role
-public interface AntivirusReportSender
+@Unstable
+public class AntivirusScan
 {
+    private final Date startDate;
+
+    private final Date endData;
+
+    private final int scannedFiles;
+
+    public AntivirusScan(Date startDate, Date endData, int scannedFiles)
+    {
+        this.startDate = startDate;
+        this.endData = endData;
+        this.scannedFiles = scannedFiles;
+    }
+
     /**
-     * @param antivirusScan a representation of an antivirus job scan
-     * @throws Exception in case of problems
+     * @return the date when the scan started
      */
-    void sendReport(AntivirusScan antivirusScan) throws Exception;
+    public Date getStartDate()
+    {
+        return startDate;
+    }
+
+    /**
+     * @return the date when the scan finished
+     */
+    public Date getEndData()
+    {
+        return endData;
+    }
+
+    /**
+     * @return the number of files that were scanned during the job
+     */
+    public int getScannedFiles()
+    {
+        return scannedFiles;
+    }
 }

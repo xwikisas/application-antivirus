@@ -55,7 +55,7 @@ import com.xpn.xwiki.plugin.scheduler.SchedulerPlugin;
  * where is fixed.
  *
  * @version $Id$
- * @since 1.4.3
+ * @since 1.5
  */
 @Component
 @Named(AntivirusJobSchedulerListener.ROLE_HINT)
@@ -72,7 +72,7 @@ public class AntivirusJobSchedulerListener extends AbstractEventListener impleme
      */
     protected static final String ANTIVIRUS_API_ID = "com.xwiki.antivirus:application-antivirus-api";
 
-    protected static final LocalDocumentReference JOB_DOC =
+    public static final LocalDocumentReference JOB_DOC =
         new LocalDocumentReference(Collections.singletonList("Antivirus"), "AntivirusJob");
 
     private static final List<Event> EVENTS = Collections.singletonList(new ExtensionInstalledEvent());

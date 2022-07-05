@@ -118,13 +118,7 @@
       #set ($authorReference = $attachment.attachment.authorReference)
       &lt;td style="text-align: left"&gt;&lt;a href="$xwiki.xWiki.getExternalURL($authorReference, 'view', $xcontext.context)"&gt;$escapetool.xml($xwiki.getPlainUserName($authorReference))&lt;/a&gt;&lt;/td&gt;
       &lt;td style="text-align: left"&gt;$xwiki.formatDate($attachment.date)&lt;/td&gt;
-      &lt;td style="text-align: left"&gt;
-        #if ($valuesType == 'infections')
-          $escapetool.xml($attachmentsMapEntry.value)
-        #elseif ($valuesType == 'errors')
-          $escapetool.xml($exceptiontool.getRootCauseMessage($attachmentsMapEntry.value))
-        #end
-      &lt;/td&gt;
+      &lt;td style="text-align: left"&gt;$escapetool.xml($attachmentsMapEntry.value)&lt;/td&gt;
     &lt;/tr&gt;
   #end
   &lt;/table&gt;
@@ -136,7 +130,8 @@
 
 &lt;p&gt;
   &lt;b&gt;Scan start date:&lt;/b&gt; $xwiki.formatDate($startDate)&lt;br&gt;
-  &lt;b&gt;Scan finish date:&lt;/b&gt; $xwiki.formatDate($endDate)
+  &lt;b&gt;Scan finish date:&lt;/b&gt; $xwiki.formatDate($endDate)&lt;br&gt;
+  &lt;b&gt;Number of attachments scanned:&lt;/b&gt; $filesScanned
 &lt;/p&gt;
 
 #set ($nrOfInfections = $deletedInfectedAttachments.size() + $deleteFailedInfectedAttachments.size())
@@ -270,13 +265,7 @@ The XWiki Antivirus Application
       #set ($authorReference = $attachment.attachment.authorReference)
       &lt;td style="text-align: left"&gt;&lt;a href="$xwiki.xWiki.getExternalURL($authorReference, 'view', $xcontext.context)"&gt;$escapetool.xml($xwiki.getPlainUserName($authorReference))&lt;/a&gt;&lt;/td&gt;
       &lt;td style="text-align: left"&gt;$xwiki.formatDate($attachment.date)&lt;/td&gt;
-      &lt;td style="text-align: left"&gt;
-        #if ($valuesType == 'infections')
-          $escapetool.xml($attachmentsMapEntry.value)
-        #elseif ($valuesType == 'errors')
-          $escapetool.xml($exceptiontool.getRootCauseMessage($attachmentsMapEntry.value))
-        #end
-      &lt;/td&gt;
+      &lt;td style="text-align: left"&gt;$escapetool.xml($attachmentsMapEntry.value)&lt;/td&gt;
     &lt;/tr&gt;
   #end
   &lt;/table&gt;
@@ -288,7 +277,8 @@ The XWiki Antivirus Application
 
 &lt;p&gt;
   &lt;b&gt;Date de début de l'analyse:&lt;/b&gt; $xwiki.formatDate($startDate)&lt;br&gt;
-  &lt;b&gt;Date de fin de l'analyse:&lt;/b&gt; $xwiki.formatDate($endDate)
+  &lt;b&gt;Date de fin de l'analyse:&lt;/b&gt; $xwiki.formatDate($endDate)&lt;br&gt;
+  &lt;b&gt;Nombre de fichiers analysés:&lt;/b&gt; $filesScanned
 &lt;/p&gt;
 
 #set ($nrOfInfections = $deletedInfectedAttachments.size() + $deleteFailedInfectedAttachments.size())
@@ -422,13 +412,7 @@ L'application d'Antivirus pour XWiki
       #set ($authorReference = $attachment.attachment.authorReference)
       &lt;td style="text-align: left"&gt;&lt;a href="$xwiki.xWiki.getExternalURL($authorReference, 'view', $xcontext.context)"&gt;$escapetool.xml($xwiki.getPlainUserName($authorReference))&lt;/a&gt;&lt;/td&gt;
       &lt;td style="text-align: left"&gt;$xwiki.formatDate($attachment.date)&lt;/td&gt;
-      &lt;td style="text-align: left"&gt;
-        #if ($valuesType == 'infections')
-          $escapetool.xml($attachmentsMapEntry.value)
-        #elseif ($valuesType == 'errors')
-          $escapetool.xml($exceptiontool.getRootCauseMessage($attachmentsMapEntry.value))
-        #end
-      &lt;/td&gt;
+      &lt;td style="text-align: left"&gt;$escapetool.xml($attachmentsMapEntry.value)&lt;/td&gt;
     &lt;/tr&gt;
   #end
   &lt;/table&gt;
@@ -440,7 +424,8 @@ L'application d'Antivirus pour XWiki
 
 &lt;p&gt;
   &lt;b&gt;Data începerii scanării:&lt;/b&gt; $xwiki.formatDate($startDate)&lt;br&gt;
-  &lt;b&gt;Data finalizării scanării:&lt;/b&gt; $xwiki.formatDate($endDate)
+  &lt;b&gt;Data finalizării scanării:&lt;/b&gt; $xwiki.formatDate($endDate)&lt;br&gt;
+  &lt;b&gt;Numărul fişierelor scanate:&lt;/b&gt; $filesScanned
 &lt;/p&gt;
 
 #set ($nrOfErrors = $deletedInfectedAttachments.size() + $deleteFailedInfectedAttachments.size())

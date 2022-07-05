@@ -19,7 +19,6 @@
  */
 package com.xwiki.antivirus.internal;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -27,6 +26,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -49,9 +49,10 @@ import org.xwiki.model.reference.DocumentReference;
 import com.xpn.xwiki.XWiki;
 import com.xpn.xwiki.XWikiContext;
 import com.xpn.xwiki.api.Attachment;
-import com.xpn.xwiki.api.Document;
 import com.xpn.xwiki.doc.XWikiAttachment;
+import com.xwiki.antivirus.AntivirusLog;
 import com.xwiki.antivirus.AntivirusReportSender;
+import com.xwiki.antivirus.AntivirusScan;
 
 /**
  * Default implementation for {@link AntivirusReportSender} using the Mail API.
@@ -78,6 +79,9 @@ public class DefaultAntivirusReportSender implements AntivirusReportSender, Init
     @Inject
     private ComponentManager componentManager;
 
+    @Inject
+    AntivirusLog antivirusLog;
+
     private DocumentReference templateReference;
 
     private List<DocumentReference> notificationGroupReferences;
@@ -90,33 +94,31 @@ public class DefaultAntivirusReportSender implements AntivirusReportSender, Init
         this.templateReference = new DocumentReference(mainWikiName, "Antivirus", "ScheduledScanReportMailTemplate");
 
         this.notificationGroupReferences =
-            Arrays.asList(new DocumentReference(mainWikiName, "XWiki", "XWikiAdminGroup"));
+            Collections.singletonList(new DocumentReference(mainWikiName, "XWiki", "XWikiAdminGroup"));
     }
 
     @Override
-    public void sendReport(Map<XWikiAttachment, Collection<String>> deletedInfectedAttachments,
-        Map<XWikiAttachment, Collection<String>> deleteFailedInfectedAttachments,
-        Map<XWikiAttachment, Exception> scanFailedAttachments, Date startDate, Date endDate) throws Exception
+    public void sendReport(AntivirusScan antivirusScan) throws Exception
     {
         XWikiContext context = contextProvider.get();
         XWiki xwiki = context.getWiki();
 
+        // Generate the needed Attachment to String Collection maps from the AntivirusIncident documents.
+        Map<String, Map<Attachment, Collection<String>>> incidents =
+            getIncidents(antivirusScan.getStartDate(), context);
         // API classes are easier to use with velocity in the template.
-        Map<Attachment, Collection<String>> apiDeletedInfectedAttachments =
-            convertToApiAttachments(deletedInfectedAttachments, context);
-        Map<Attachment, Collection<String>> apiDeleteFailedInfectedAttachments =
-            convertToApiAttachments(deleteFailedInfectedAttachments, context);
-        Map<Attachment, Exception> apiScanFailedAttachments = convertToApiAttachments(scanFailedAttachments, context);
 
         Map<String, Object> velocityVariables = new HashMap<>();
-        velocityVariables.put("deletedInfectedAttachments", apiDeletedInfectedAttachments);
-        velocityVariables.put("deleteFailedInfectedAttachments", apiDeleteFailedInfectedAttachments);
-        velocityVariables.put("scanFailedAttachments", apiScanFailedAttachments);
+        velocityVariables.put("deletedInfectedAttachments", incidents.getOrDefault("deleted", Collections.EMPTY_MAP));
+        velocityVariables.put("deleteFailedInfectedAttachments",
+            incidents.getOrDefault("deleteFailed", Collections.EMPTY_MAP));
+        velocityVariables.put("scanFailedAttachments", incidents.getOrDefault("scanFailed", Collections.EMPTY_MAP));
+        velocityVariables.put("filesScanned", antivirusScan.getScannedFiles());
         velocityVariables.put("wikiUrl", xwiki.getExternalURL("Main.WebHome", "view", context));
         velocityVariables.put("adminUrl",
             xwiki.getExternalURL("XWiki.XWikiPreferences", "admin", "editor=globaladmin&section=antivirus", context));
-        velocityVariables.put("startDate", startDate);
-        velocityVariables.put("endDate", endDate);
+        velocityVariables.put("startDate", antivirusScan.getStartDate());
+        velocityVariables.put("endDate", antivirusScan.getEndData());
 
         Map<String, Object> templateFactoryParameters = new HashMap<>();
         templateFactoryParameters.put("type", "antivirusReport");
@@ -131,7 +133,7 @@ public class DefaultAntivirusReportSender implements AntivirusReportSender, Init
         Map<String, List<DocumentReference>> usersOrGroups = new HashMap<>();
         usersOrGroups.put("groups", notificationGroupReferences);
 
-        Session session = sessionFactory.create(Collections.<String, String>emptyMap());
+        Session session = sessionFactory.create(Collections.emptyMap());
 
         Iterator<MimeMessage> messages =
             usersAndGroupsMessageFactory.createMessage(usersOrGroups, usersAndGroupsFactoryParameters);
@@ -141,16 +143,19 @@ public class DefaultAntivirusReportSender implements AntivirusReportSender, Init
         mailSender.sendAsynchronously(IteratorUtils.asIterable(messages), session, mailListener);
     }
 
-    private <T> Map<Attachment, T> convertToApiAttachments(Map<XWikiAttachment, T> deletedInfectedAttachments,
-        XWikiContext context)
+    private Map<String, Map<Attachment, Collection<String>>> getIncidents(Date startDate, XWikiContext context)
+        throws Exception
     {
-        Map<Attachment, T> result = new HashMap<>();
-        for (Map.Entry<XWikiAttachment, T> entry : deletedInfectedAttachments.entrySet()) {
-            result.put(new Attachment(new Document(entry.getKey().getDoc(), context), entry.getKey(), context),
-                entry.getValue());
+        Map<String, Map<XWikiAttachment, Collection<String>>> incidents = antivirusLog.getIncidents(startDate);
+
+        Map<String, Map<Attachment, Collection<String>>> modifiedIncidents = new HashMap<>();
+
+        for (Map.Entry<String, Map<XWikiAttachment, Collection<String>>> entry : incidents.entrySet()) {
+            Map<Attachment, Collection<String>> incidentsGroup = entry.getValue().entrySet().stream().collect(
+                Collectors.toMap(e -> new Attachment(e.getKey().getDoc().newDocument(context), e.getKey(), context),
+                    Map.Entry::getValue));
+            modifiedIncidents.put(entry.getKey(), incidentsGroup);
         }
-
-        return result;
+        return modifiedIncidents;
     }
-
 }

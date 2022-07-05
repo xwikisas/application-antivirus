@@ -31,7 +31,7 @@ public interface AntivirusConfiguration
 {
     /**
      * @return {@code true} if scanning is enabled, for any of the attachment uploading, page creation or scheduled
-     *         full-wiki scan operations
+     *     full-wiki scan operations
      */
     boolean isEnabled();
 
@@ -42,7 +42,7 @@ public interface AntivirusConfiguration
 
     /**
      * @return {@code true} if the report at the end of a Scheduled Scan should always be sent to the admins, even when
-     *         no infection has been detected
+     *     no infection has been detected
      */
     boolean shouldAlwaysSendReport();
 

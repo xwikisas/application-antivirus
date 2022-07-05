@@ -58,7 +58,7 @@ import com.xwiki.licensing.Licensor;
 
 /**
  * Listener for whenever an attachment is added to or updated on a document. Each time, each affected attachment is
- * scanned and, in case a virus is detected, the event and the save operation itself will be cancel.
+ * scanned and, in case a virus is detected, the event and the save operation itself will be canceled.
  *
  * @version $Id$
  */

@@ -174,7 +174,7 @@
       <unmodifiable>0</unmodifiable>
       <validationMessage/>
       <validationRegExp/>
-      <values>blocked|deleted|deleteFailed</values>
+      <values>blocked|deleted|deleteFailed|scanFailed</values>
       <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
     </incidentAction>
     <incidentContext>
