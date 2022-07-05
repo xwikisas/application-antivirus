@@ -334,7 +334,7 @@ public class AntivirusJob extends AbstractJob
         try {
             document.setAuthorReference(context.getUserReference());
             context.getWiki().saveDocument(document,
-                String.format("[Antivirus Application] Automatically removed infected attachment [{}].",
+                String.format("[Antivirus Application] Automatically removed infected attachment [%s].",
                     attachment.getFilename()), context);
 
             logIncident(antivirusLog, attachment, foundViruses, "deleted", engineHint, serializer, scanProperties,
@@ -353,7 +353,6 @@ public class AntivirusJob extends AbstractJob
     {
         AntivirusConfiguration antivirusConfiguration = Utils.getComponent(AntivirusConfiguration.class);
 
-        QueryManager queryManager = Utils.getComponent(QueryManager.class);
         // Check if there are any incidents after the current scan.
         Map<String, Map<AttachmentReference, Collection<String>>> incidents;
         try {

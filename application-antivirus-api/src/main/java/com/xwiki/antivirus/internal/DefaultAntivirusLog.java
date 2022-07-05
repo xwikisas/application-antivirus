@@ -125,6 +125,8 @@ public class DefaultAntivirusLog implements AntivirusLog
             DocumentReference docRef = resolver.resolve(incidentObj.getStringValue("attachmentDocument"));
             XWikiDocument document = context.getWiki().getDocument(docRef, context);
             XWikiAttachment attachment = new XWikiAttachment(document, incidentObj.getStringValue("attachmentName"));
+            attachment.setDate(incidentObj.getDateValue("attachmentDate"));
+            attachment.setAuthorReference(resolver.resolve(incidentObj.getStringValue("attachmentAuthor")));
             String incidentAction = incidentObj.getStringValue("incidentAction");
             incidents.putIfAbsent(incidentAction, new HashMap<>());
             incidents.get(incidentAction).put(attachment, incidentObj.getListValue("attachmentInfections"));
