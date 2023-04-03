@@ -2,7 +2,7 @@
 
 Keeps your wiki safe by scanning file attachments for viruses or malware.
 
-* Project Lead: [Eduard Moraru](https://github.com/Enygma2002)
+* Project Lead: N/A
 * [Documentation & Download](https://store.xwiki.com/xwiki/bin/view/Extension/Antivirus+Application)
 * Communication: [Mailing List](https://dev.xwiki.org/xwiki/bin/view/Community/MailingLists), [Chat](https://dev.xwiki.org/xwiki/bin/view/Community/Chat)
 * [Development Practices](https://dev.xwiki.org/)
