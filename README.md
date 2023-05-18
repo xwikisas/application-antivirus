@@ -6,7 +6,7 @@ Keeps your wiki safe by scanning file attachments for viruses or malware.
 * [Documentation & Download](https://store.xwiki.com/xwiki/bin/view/Extension/Antivirus+Application)
 * Communication: [Mailing List](https://dev.xwiki.org/xwiki/bin/view/Community/MailingLists), [Chat](https://dev.xwiki.org/xwiki/bin/view/Community/Chat)
 * [Development Practices](https://dev.xwiki.org/)
-* Minimal XWiki version supported: XWiki 11.10
+* Minimal XWiki version supported: XWiki 13.10
 * License: LGPL 2.1
 * Translations: N/A
 * Sonar Dashboard: N/A

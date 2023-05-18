@@ -30,7 +30,6 @@ import javax.inject.Singleton;
 import org.quartz.SchedulerException;
 import org.quartz.Trigger.TriggerState;
 import org.xwiki.classloader.ClassLoaderManager;
-import org.xwiki.classloader.xwiki.internal.ContextNamespaceURLClassLoader;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.component.phase.Initializable;
 import org.xwiki.component.phase.InitializationException;
@@ -103,10 +102,6 @@ public class AntivirusJobSchedulerListener extends AbstractEventListener impleme
     @Override
     public void initialize() throws InitializationException
     {
-        // Overwrite the Thread Context ClassLoader to work around the https://jira.xwiki.org/browse/XCOMMONS-2064 bug.
-        // Remove this hack once it's fixed and licensing starts depending on XWiki >= the version where it's fixed.
-        Thread.currentThread().setContextClassLoader(
-            new ContextNamespaceURLClassLoader(this.wikiDescriptorManager, this.classLoaderManager));
 
         try {
             // Don't trigger the rescheduling process at xwiki startup time.

@@ -27,19 +27,24 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import javax.inject.Provider;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
 import org.slf4j.Logger;
 import org.xwiki.bridge.event.DocumentCreatingEvent;
 import org.xwiki.bridge.event.DocumentUpdatingEvent;
 import org.xwiki.component.manager.ComponentLookupException;
-import org.xwiki.diff.Delta.Type;
+import org.xwiki.component.manager.ComponentManager;
+import org.xwiki.component.util.ReflectionUtils;
+import org.xwiki.diff.Delta;
 import org.xwiki.model.reference.AttachmentReference;
 import org.xwiki.model.reference.DocumentReference;
-import org.xwiki.observation.EventListener;
 import org.xwiki.observation.event.CancelableEvent;
-import org.xwiki.test.mockito.MockitoComponentMockingRule;
+import org.xwiki.test.junit5.mockito.ComponentTest;
+import org.xwiki.test.junit5.mockito.InjectMockComponents;
+import org.xwiki.test.junit5.mockito.MockComponent;
 
 import com.xpn.xwiki.XWikiContext;
 import com.xpn.xwiki.doc.AttachmentDiff;
@@ -58,8 +63,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 /**
@@ -67,29 +72,47 @@ import static org.mockito.Mockito.when;
  *
  * @version $Id$
  */
-public class AttachmentUploadedEventListenerTest
+@ComponentTest
+class AttachmentUploadedEventListenerTest
 {
-    @Rule
-    public final MockitoComponentMockingRule<EventListener> mocker =
-        new MockitoComponentMockingRule<>(AttachmentUploadedEventListener.class);
+    private static final String ENGINE_NAME = "clamav";
 
+    @InjectMockComponents
+    private AttachmentUploadedEventListener eventListener;
+
+    @MockComponent
     private Logger logger;
 
+    @MockComponent
     private AntivirusConfiguration configuration;
 
+    @MockComponent
+    private Provider<Licensor> licensorProvider;
+
+    @MockComponent
+    private AntivirusLog antivirusLog;
+
+    @MockComponent
+    private ComponentManager componentManager;
+
+    @Mock
+    private Licensor licensor;
+
+    @Mock
     private CancelableEvent event;
 
+    @Mock
     private XWikiContext context;
 
+    @Mock
     private XWikiDocument doc;
 
+    @Mock
     private XWikiDocument orignalDoc;
 
     private DocumentReference docReference;
 
     private DocumentReference userReference;
-
-    private EventListener listener;
 
     private List<XWikiAttachment> attachmentList;
 
@@ -99,21 +122,19 @@ public class AttachmentUploadedEventListenerTest
 
     private AttachmentReference attachmentReference;
 
-    private Licensor licensor;
-
+    @Mock
     private AntivirusEngine engine;
 
     private ScanResult scanResult;
 
-    private AntivirusLog antivirusLog;
-
-    @Before
-    public void setUp() throws Exception
+    @BeforeEach
+    void setUp() throws Exception
     {
-        listener = mocker.getComponentUnderTest();
-
-        configuration = mocker.getInstance(AntivirusConfiguration.class);
+        ReflectionUtils.setFieldValue(this.eventListener, "logger", this.logger);
         when(configuration.isEnabled()).thenReturn(true);
+        when(configuration.getDefaultEngineName()).thenReturn(ENGINE_NAME);
+        when(componentManager.getInstance(AntivirusEngine.class, ENGINE_NAME)).thenReturn(engine);
+        when(licensorProvider.get()).thenReturn(licensor);
 
         event = spy(new DocumentUpdatingEvent());
 
@@ -138,7 +159,6 @@ public class AttachmentUploadedEventListenerTest
         attachment2 = mock(XWikiAttachment.class);
         when(attachment2.getReference()).thenReturn(attachmentReference);
 
-        logger = mocker.getMockedLogger();
         when(logger.isDebugEnabled()).thenReturn(true);
 
         context = mock(XWikiContext.class);
@@ -146,22 +166,20 @@ public class AttachmentUploadedEventListenerTest
         when(context.getUserReference()).thenReturn(userReference);
         when(context.getMainXWiki()).thenReturn("xwiki");
 
-        licensor = mocker.getInstance(Licensor.class);
         when(licensor.hasLicensure(new DocumentReference(context.getMainXWiki(), "Antivirus", "ConfigurationClass")))
             .thenReturn(true);
 
-        engine = mock(AntivirusEngine.class);
         scanResult = new ScanResult(attachmentReference, true, Collections.emptyList());
-
-        antivirusLog = mocker.getInstance(AntivirusLog.class);
     }
 
     @Test
-    public void antivirusDisabled() throws Exception
+    void antivirusDisabled() throws Exception
     {
         when(configuration.isEnabled()).thenReturn(false);
 
-        listener.onEvent(event, doc, context);
+        when(logger.isDebugEnabled()).thenReturn(true);
+
+        eventListener.onEvent(event, doc, context);
 
         verify(logger, times(1)).debug(
             "Skipping attachment scan for event [{}] by user [{}] on document [{}]. Antivirus is disabled.",
@@ -174,42 +192,42 @@ public class AttachmentUploadedEventListenerTest
     }
 
     @Test
-    public void noAttachmentsNewDocument() throws Exception
+    void noAttachmentsNewDocument() throws Exception
     {
         event = new DocumentCreatingEvent();
 
-        listener.onEvent(event, doc, context);
+        eventListener.onEvent(event, doc, context);
 
         verify(doc, times(1)).getAttachmentList();
 
         // Make sure execution stops before checking license.
-        verifyZeroInteractions(licensor);
+        verifyNoInteractions(licensor);
 
         // Make sure no scanning is performed.
-        verifyZeroInteractions(engine);
+        verifyNoInteractions(engine);
     }
 
     @Test
-    public void noAttachmentsChangedExistingDocument() throws Exception
+    void noAttachmentsChangedExistingDocument() throws Exception
     {
         // No attachment changes.
         when(doc.getAttachmentDiff(orignalDoc, doc, context)).thenReturn(Collections.emptyList());
 
-        listener.onEvent(event, doc, context);
+        eventListener.onEvent(event, doc, context);
 
         // Make sure execution stops before checking license.
-        verifyZeroInteractions(licensor);
+        verifyNoInteractions(licensor);
 
         // Make sure no scanning is performed.
-        verifyZeroInteractions(engine);
+        verifyNoInteractions(engine);
     }
 
     @Test
-    public void attachmentsChangedExistingDocumentNoLicense() throws Exception
+    void attachmentsChangedExistingDocumentNoLicense() throws Exception
     {
-        AttachmentDiff attachmentdiff1 = new AttachmentDiff("file.ext", Type.INSERT, null, attachment1);
-        AttachmentDiff attachmentdiff2 = new AttachmentDiff("file.ext", Type.CHANGE, attachment1, attachment2);
-        AttachmentDiff attachmentdiff3 = new AttachmentDiff("file.ext", Type.DELETE, attachment2, null);
+        AttachmentDiff attachmentdiff1 = new AttachmentDiff("file.ext", Delta.Type.INSERT, null, attachment1);
+        AttachmentDiff attachmentdiff2 = new AttachmentDiff("file.ext", Delta.Type.CHANGE, attachment1, attachment2);
+        AttachmentDiff attachmentdiff3 = new AttachmentDiff("file.ext", Delta.Type.DELETE, attachment2, null);
         List<AttachmentDiff> attachmentDiffs = Arrays.asList(attachmentdiff1, attachmentdiff2, attachmentdiff3);
 
         when(doc.getAttachmentDiff(orignalDoc, doc, context)).thenReturn(attachmentDiffs);
@@ -217,7 +235,7 @@ public class AttachmentUploadedEventListenerTest
         when(licensor.hasLicensure(new DocumentReference(context.getMainXWiki(), "Antivirus", "ConfigurationClass")))
             .thenReturn(false);
 
-        listener.onEvent(event, doc, context);
+        eventListener.onEvent(event, doc, context);
 
         verify(configuration, times(1)).isEnabled();
 
@@ -229,46 +247,45 @@ public class AttachmentUploadedEventListenerTest
     }
 
     @Test
-    public void attachmentsChangedExistingDocumentNoEngineImplementation() throws Exception
+    void attachmentsChangedExistingDocumentNoEngineImplementation() throws Exception
     {
-        AttachmentDiff attachmentdiff1 = new AttachmentDiff("file.ext", Type.INSERT, null, attachment1);
-        AttachmentDiff attachmentdiff2 = new AttachmentDiff("file.ext", Type.CHANGE, attachment1, attachment2);
-        AttachmentDiff attachmentdiff3 = new AttachmentDiff("file.ext", Type.DELETE, attachment2, null);
+        AttachmentDiff attachmentdiff1 = new AttachmentDiff("file.ext", Delta.Type.INSERT, null, attachment1);
+        AttachmentDiff attachmentdiff2 = new AttachmentDiff("file.ext", Delta.Type.CHANGE, attachment1, attachment2);
+        AttachmentDiff attachmentdiff3 = new AttachmentDiff("file.ext", Delta.Type.DELETE, attachment2, null);
         List<AttachmentDiff> attachmentDiffs = Arrays.asList(attachmentdiff1, attachmentdiff2, attachmentdiff3);
 
         when(doc.getAttachmentDiff(orignalDoc, doc, context)).thenReturn(attachmentDiffs);
-
-        listener.onEvent(event, doc, context);
+        when(componentManager.getInstance(AntivirusEngine.class, ENGINE_NAME)).thenThrow(
+            new ComponentLookupException("No component found"));
+        eventListener.onEvent(event, doc, context);
 
         verify(licensor, times(1))
             .hasLicensure(new DocumentReference(context.getMainXWiki(), "Antivirus", "ConfigurationClass"));
 
         verify(logger, times(1)).error(
             eq("Failed to load antivirus engine [{}] to scan attachments for event [{}] by user [{}] on document [{}]"),
-            eq(null), eq(event.getClass().getName()), eq(userReference), eq(docReference),
+            eq(ENGINE_NAME), eq(event.getClass().getName()), eq(userReference), eq(docReference),
             any(ComponentLookupException.class));
     }
 
     @Test
-    public void attachmentsChangedExistingDocumentScanErrors() throws Exception
+    void attachmentsChangedExistingDocumentScanErrors() throws Exception
     {
-        AttachmentDiff attachmentdiff1 = new AttachmentDiff("file.ext", Type.INSERT, null, attachment1);
-        AttachmentDiff attachmentdiff2 = new AttachmentDiff("file.ext", Type.CHANGE, attachment1, attachment2);
-        AttachmentDiff attachmentdiff3 = new AttachmentDiff("file.ext", Type.DELETE, attachment2, null);
+        AttachmentDiff attachmentdiff1 = new AttachmentDiff("file.ext", Delta.Type.INSERT, null, attachment1);
+        AttachmentDiff attachmentdiff2 = new AttachmentDiff("file.ext", Delta.Type.CHANGE, attachment1, attachment2);
+        AttachmentDiff attachmentdiff3 = new AttachmentDiff("file.ext", Delta.Type.DELETE, attachment2, null);
         List<AttachmentDiff> attachmentDiffs = Arrays.asList(attachmentdiff1, attachmentdiff2, attachmentdiff3);
 
         when(doc.getAttachmentDiff(orignalDoc, doc, context)).thenReturn(attachmentDiffs);
 
-        String roleHint = "virusBeGone";
-        when(configuration.getDefaultEngineName()).thenReturn(roleHint);
+        when(configuration.getDefaultEngineName()).thenReturn(ENGINE_NAME);
 
-        engine = mocker.registerMockComponent(AntivirusEngine.class, roleHint);
         when(engine.scan(attachment2)).thenReturn(scanResult);
 
         Exception exception = new AntivirusException("oops", null);
         when(engine.scan(attachment1)).thenThrow(exception);
 
-        listener.onEvent(event, doc, context);
+        eventListener.onEvent(event, doc, context);
 
         verify(configuration, times(1)).isEnabled();
 
@@ -294,23 +311,21 @@ public class AttachmentUploadedEventListenerTest
     }
 
     @Test
-    public void attachmentsChangedExistingDocumentNoInfections() throws Exception
+    void attachmentsChangedExistingDocumentNoInfections() throws Exception
     {
-        AttachmentDiff attachmentdiff1 = new AttachmentDiff("file.ext", Type.INSERT, null, attachment1);
-        AttachmentDiff attachmentdiff2 = new AttachmentDiff("file.ext", Type.CHANGE, attachment1, attachment2);
-        AttachmentDiff attachmentdiff3 = new AttachmentDiff("file.ext", Type.DELETE, attachment2, null);
+        AttachmentDiff attachmentdiff1 = new AttachmentDiff("file.ext", Delta.Type.INSERT, null, attachment1);
+        AttachmentDiff attachmentdiff2 = new AttachmentDiff("file.ext", Delta.Type.CHANGE, attachment1, attachment2);
+        AttachmentDiff attachmentdiff3 = new AttachmentDiff("file.ext", Delta.Type.DELETE, attachment2, null);
         List<AttachmentDiff> attachmentDiffs = Arrays.asList(attachmentdiff1, attachmentdiff2, attachmentdiff3);
 
         when(doc.getAttachmentDiff(orignalDoc, doc, context)).thenReturn(attachmentDiffs);
 
-        String roleHint = "virusBeGone";
-        when(configuration.getDefaultEngineName()).thenReturn(roleHint);
+        when(configuration.getDefaultEngineName()).thenReturn(ENGINE_NAME);
 
-        engine = mocker.registerMockComponent(AntivirusEngine.class, roleHint);
         when(engine.scan(attachment1)).thenReturn(scanResult);
         when(engine.scan(attachment2)).thenReturn(scanResult);
 
-        listener.onEvent(event, doc, context);
+        eventListener.onEvent(event, doc, context);
 
         verify(configuration, times(1)).isEnabled();
 
@@ -334,26 +349,24 @@ public class AttachmentUploadedEventListenerTest
     }
 
     @Test
-    public void attachmentsChangedExistingDocumentInfectionsFound() throws Exception
+    void attachmentsChangedExistingDocumentInfectionsFound() throws Exception
     {
-        AttachmentDiff attachmentdiff1 = new AttachmentDiff("file.ext", Type.INSERT, null, attachment1);
-        AttachmentDiff attachmentdiff2 = new AttachmentDiff("file.ext", Type.CHANGE, attachment1, attachment2);
-        AttachmentDiff attachmentdiff3 = new AttachmentDiff("file.ext", Type.DELETE, attachment2, null);
+        AttachmentDiff attachmentdiff1 = new AttachmentDiff("file.ext", Delta.Type.INSERT, null, attachment1);
+        AttachmentDiff attachmentdiff2 = new AttachmentDiff("file.ext", Delta.Type.CHANGE, attachment1, attachment2);
+        AttachmentDiff attachmentdiff3 = new AttachmentDiff("file.ext", Delta.Type.DELETE, attachment2, null);
         List<AttachmentDiff> attachmentDiffs = Arrays.asList(attachmentdiff1, attachmentdiff2, attachmentdiff3);
 
         when(doc.getAttachmentDiff(orignalDoc, doc, context)).thenReturn(attachmentDiffs);
 
-        String roleHint = "virusBeGone";
-        when(configuration.getDefaultEngineName()).thenReturn(roleHint);
+        when(configuration.getDefaultEngineName()).thenReturn(ENGINE_NAME);
 
-        engine = mocker.registerMockComponent(AntivirusEngine.class, roleHint);
         when(engine.scan(attachment1)).thenReturn(scanResult);
 
         ScanResult infectionResult =
             new ScanResult(attachmentReference, false, Arrays.asList("Here", "there", "be", "dragons"));
         when(engine.scan(attachment2)).thenReturn(infectionResult);
 
-        listener.onEvent(event, doc, context);
+        eventListener.onEvent(event, doc, context);
 
         verify(configuration, times(1)).isEnabled();
 
@@ -374,7 +387,7 @@ public class AttachmentUploadedEventListenerTest
 
         // Check the incident is logged in the antivirus log.
         verify(antivirusLog, times(1)).log(attachment2, infectionResult.getfoundViruses(), "blocked", "upload",
-            roleHint);
+            ENGINE_NAME);
 
         // Make sure no other scans are made (i.e. for the DELETE).
         verifyNoMoreInteractions(engine);
