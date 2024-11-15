@@ -20,7 +20,7 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
 -->
 
-<xwikidoc version="1.4" reference="Antivirus.ScheduledScanReportMailTemplate" locale="">
+<xwikidoc version="1.5" reference="Antivirus.ScheduledScanReportMailTemplate" locale="">
   <web>Antivirus</web>
   <name>ScheduledScanReportMailTemplate</name>
   <language/>
@@ -58,6 +58,7 @@
         <name>html</name>
         <number>4</number>
         <prettyName>HTML</prettyName>
+        <restricted>0</restricted>
         <rows>15</rows>
         <size>80</size>
         <unmodifiable>0</unmodifiable>
@@ -88,6 +89,7 @@
         <name>text</name>
         <number>3</number>
         <prettyName>Text</prettyName>
+        <restricted>0</restricted>
         <rows>15</rows>
         <size>80</size>
         <unmodifiable>0</unmodifiable>
@@ -205,6 +207,7 @@ The XWiki Antivirus Application
         <name>html</name>
         <number>4</number>
         <prettyName>HTML</prettyName>
+        <restricted>0</restricted>
         <rows>15</rows>
         <size>80</size>
         <unmodifiable>0</unmodifiable>
@@ -235,6 +238,7 @@ The XWiki Antivirus Application
         <name>text</name>
         <number>3</number>
         <prettyName>Text</prettyName>
+        <restricted>0</restricted>
         <rows>15</rows>
         <size>80</size>
         <unmodifiable>0</unmodifiable>
@@ -352,6 +356,7 @@ L'application d'Antivirus pour XWiki
         <name>html</name>
         <number>4</number>
         <prettyName>HTML</prettyName>
+        <restricted>0</restricted>
         <rows>15</rows>
         <size>80</size>
         <unmodifiable>0</unmodifiable>
@@ -382,6 +387,7 @@ L'application d'Antivirus pour XWiki
         <name>text</name>
         <number>3</number>
         <prettyName>Text</prettyName>
+        <restricted>0</restricted>
         <rows>15</rows>
         <size>80</size>
         <unmodifiable>0</unmodifiable>
