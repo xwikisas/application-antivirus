@@ -20,12 +20,12 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
 -->
 
-<xwikidoc version="1.5" reference="Antivirus.ClamavTranslations" locale="">
+<xwikidoc version="1.5" reference="Antivirus.ClamavTranslations" locale="de">
   <web>Antivirus</web>
   <name>ClamavTranslations</name>
-  <language/>
+  <language>de</language>
   <defaultLanguage>en</defaultLanguage>
-  <translation>0</translation>
+  <translation>1</translation>
   <creator>xwiki:XWiki.Admin</creator>
   <parent>Antivirus.WebHome</parent>
   <author>xwiki:XWiki.Admin</author>
@@ -42,41 +42,4 @@ Antivirus.ClamavConfigurationClass_host=Gastgeber
 ### Missing: Antivirus.ClamavConfigurationClass_port=Port
 ### Missing: Antivirus.ClamavConfigurationClass_port_hint=Port number used to access the ClamAV server.
 </content>
-  <object>
-    <name>Antivirus.ClamavTranslations</name>
-    <number>0</number>
-    <className>XWiki.TranslationDocumentClass</className>
-    <guid>d89b3068-47db-4d8e-a16b-cd0fd4e71071</guid>
-    <class>
-      <name>XWiki.TranslationDocumentClass</name>
-      <customClass/>
-      <customMapping/>
-      <defaultViewSheet/>
-      <defaultEditSheet/>
-      <defaultWeb/>
-      <nameField/>
-      <validationScript/>
-      <scope>
-        <cache>0</cache>
-        <disabled>0</disabled>
-        <displayType>select</displayType>
-        <freeText>forbidden</freeText>
-        <largeStorage>0</largeStorage>
-        <multiSelect>0</multiSelect>
-        <name>scope</name>
-        <number>1</number>
-        <prettyName>Scope</prettyName>
-        <relationalStorage>0</relationalStorage>
-        <separator> </separator>
-        <separators>|, </separators>
-        <size>1</size>
-        <unmodifiable>0</unmodifiable>
-        <values>GLOBAL|WIKI|USER|ON_DEMAND</values>
-        <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
-      </scope>
-    </class>
-    <property>
-      <scope>WIKI</scope>
-    </property>
-  </object>
 </xwikidoc>
