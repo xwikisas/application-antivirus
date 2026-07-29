@@ -204,7 +204,7 @@
   }
 
   // Modal AJAX handling of the href set on the modal's Yes button.
-  modalYesButton.click(function(event) {
+  modalYesButton.on('click', function(event) {
     event.preventDefault();
 
     // Disable the Yes button while loading.
@@ -257,12 +257,12 @@
   };
 
   // Actions click handlers to perform them via a modal.
-  $('#antivirusLog .action.actiondeleteall').click(function(event) {
+  $('#antivirusLog .action.actiondeleteall').on('click', function(event) {
     modalify(event, "$services.localization.render('antivirus.log.actions.deleteall.confirm.title')", "$services.localization.render('antivirus.log.actions.deleteall.confirm.question')", "$services.localization.render('antivirus.log.actions.deleteall.confirm.button')");
   });
 
   var addIncidentConfirmations = function() {
-    $('#antivirusLog .action.actiondelete').click(function (event) {
+    $('#antivirusLog .action.actiondelete').on('click', function (event) {
       modalify(event, "$services.localization.render('antivirus.log.actions.delete.confirm.title')", "$services.localization.render('antivirus.log.actions.delete.confirm.question')", "$services.localization.render('antivirus.log.actions.delete.confirm.button')");
     });
   };
